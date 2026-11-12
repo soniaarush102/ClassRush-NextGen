@@ -46,7 +46,7 @@ jobs:
               if "com.google.gms.google-services" not in content:
                   content = content.replace(
                       "plugins {",
-                      'plugins {\\n    id("com.google.gms.google-services") version "4.4.4" apply false',
+                      'plugins {\n    id("com.google.gms.google-services") version "4.4.4" apply false',
                       1
                   )
                   settings_kts.write_text(content)
@@ -55,7 +55,7 @@ jobs:
               if "com.google.gms.google-services" not in content:
                   content = content.replace(
                       "plugins {",
-                      "plugins {\\n    id 'com.google.gms.google-services' version '4.4.4' apply false",
+                      "plugins {\n    id 'com.google.gms.google-services' version '4.4.4' apply false",
                       1
                   )
                   settings_groovy.write_text(content)
@@ -67,7 +67,7 @@ jobs:
               if "com.google.gms.google-services" not in content:
                   content = content.replace(
                       "plugins {",
-                      'plugins {\\n    id("com.google.gms.google-services")',
+                      'plugins {\n    id("com.google.gms.google-services")',
                       1
                   )
               if 'applicationId = "com.classrush.app"' not in content:
@@ -78,7 +78,7 @@ jobs:
               if "com.google.gms.google-services" not in content:
                   content = content.replace(
                       "plugins {",
-                      "plugins {\\n    id 'com.google.gms.google-services'",
+                      "plugins {\n    id 'com.google.gms.google-services'",
                       1
                   )
               if "applicationId 'com.classrush.app'" not in content and 'applicationId "com.classrush.app"' not in content:
