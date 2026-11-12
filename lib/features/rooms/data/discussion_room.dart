@@ -8,9 +8,7 @@ class DiscussionRoom {
     required this.description,
     required this.hostUid,
     required this.hostName,
-    required this.ageBand,
     required this.participantCount,
-    required this.maxParticipants,
     required this.status,
     required this.createdAt,
   });
@@ -21,14 +19,11 @@ class DiscussionRoom {
   final String description;
   final String hostUid;
   final String hostName;
-  final String ageBand;
   final int participantCount;
-  final int maxParticipants;
   final String status;
   final DateTime? createdAt;
 
-  bool get isJoinable =>
-      status == 'open' && participantCount < maxParticipants;
+  bool get isJoinable => status == 'open';
 
   factory DiscussionRoom.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
@@ -42,9 +37,7 @@ class DiscussionRoom {
       description: data['description'] as String? ?? '',
       hostUid: data['hostUid'] as String? ?? '',
       hostName: data['hostName'] as String? ?? 'Student',
-      ageBand: data['ageBand'] as String? ?? '',
       participantCount: data['participantCount'] as int? ?? 0,
-      maxParticipants: data['maxParticipants'] as int? ?? 8,
       status: data['status'] as String? ?? 'closed',
       createdAt: timestamp is Timestamp ? timestamp.toDate() : null,
     );
