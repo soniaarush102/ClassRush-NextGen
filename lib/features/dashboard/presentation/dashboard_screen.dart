@@ -102,11 +102,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() => _selectedIndex = 1);
   }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
 }
 
 class _DashboardContent extends StatelessWidget {
