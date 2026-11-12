@@ -29,12 +29,8 @@ class DiscussionRoomRepository {
     return user.uid;
   }
 
-  Stream<List<DiscussionRoom>> watchOpenRooms({
-    required String ageBand,
-    String? topic,
-  }) {
+  Stream<List<DiscussionRoom>> watchOpenRooms({String? topic}) {
     Query<Map<String, dynamic>> query = _rooms
-        .where('ageBand', isEqualTo: ageBand)
         .where('status', isEqualTo: 'open')
         .orderBy('createdAt', descending: true);
 
@@ -54,16 +50,10 @@ class DiscussionRoomRepository {
     required String title,
     required String topic,
     required String description,
-    required int maxParticipants,
   }) async {
     final uid = _uid;
     if (title.trim().isEmpty) {
       throw const DiscussionRoomException('Enter a room name.');
-    }
-    if (maxParticipants < 2 || maxParticipants > 8) {
-      throw const DiscussionRoomException(
-        'A room can have between 2 and 8 participants.',
-      );
     }
 
     final roomRef = _rooms.doc();
@@ -78,14 +68,7 @@ class DiscussionRoomRepository {
         );
       }
 
-      final ageBand = profile['ageBand'] as String? ?? '';
       final displayName = profile['displayName'] as String? ?? 'Student';
-      if (ageBand.isEmpty) {
-        throw const DiscussionRoomException(
-          'Choose your age group in your profile first.',
-        );
-      }
-
       final now = FieldValue.serverTimestamp();
       transaction.set(roomRef, {
         'title': title.trim(),
@@ -93,9 +76,7 @@ class DiscussionRoomRepository {
         'description': description.trim(),
         'hostUid': uid,
         'hostName': displayName,
-        'ageBand': ageBand,
         'participantCount': 1,
-        'maxParticipants': maxParticipants,
         'status': 'open',
         'createdAt': now,
         'updatedAt': now,
@@ -133,18 +114,8 @@ class DiscussionRoomRepository {
         );
       }
 
-      final roomAgeBand = room['ageBand'] as String? ?? '';
-      final myAgeBand = profile['ageBand'] as String? ?? '';
-      if (roomAgeBand != myAgeBand) {
-        throw const DiscussionRoomException(
-          'This room is not available for your age group.',
-        );
-      }
-
-      final count = room['participantCount'] as int? ?? 0;
-      final capacity = room['maxParticipants'] as int? ?? 0;
-      if (room['status'] != 'open' || count >= capacity) {
-        throw const DiscussionRoomException('This room is already full or closed.');
+      if (room['status'] != 'open') {
+        throw const DiscussionRoomException('This room is closed.');
       }
 
       transaction.set(memberRef, {
@@ -153,7 +124,8 @@ class DiscussionRoomRepository {
         'joinedAt': FieldValue.serverTimestamp(),
       });
       transaction.update(roomRef, {
-        'participantCount': count + 1,
+        'participantCount':
+            (room['participantCount'] as int? ?? 0) + 1,
         'updatedAt': FieldValue.serverTimestamp(),
       });
     });
