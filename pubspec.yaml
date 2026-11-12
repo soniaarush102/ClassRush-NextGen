@@ -1,7 +1,7 @@
 name: classrush
 description: A peer-to-peer mathematics discussion and collaboration app.
 publish_to: "none"
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
