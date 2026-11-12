@@ -1,6 +1,6 @@
 # CLASSRUSH
 
-**A peer-to-peer mathematics discussion and collaboration platform for students of similar age groups.**
+**A peer-to-peer mathematics discussion and collaboration platform for students.**
 
 CLASSRUSH is being developed as a Flutter application, starting with Android and keeping the architecture ready for iOS and Windows.
 
@@ -9,7 +9,8 @@ CLASSRUSH is being developed as a Flutter application, starting with Android and
 - One common student account type; no teacher/student role split
 - An open-room discovery model: students browse available maths discussion rooms and choose which ones to join
 - Students can create a room, share its invite link/code, or join an open room without teacher approval
-- Room listings can show topic, problem being discussed, participant count, and whether the room is open or full
+- Room listings can show topic, problem being discussed, participant count, and whether the room is open
+- Open rooms are discoverable by signed-in users without age-band matching or a fixed participant limit
 - Live audio/video, participant controls, chat, and optional screen sharing
 - Collaborative whiteboard with named live cursors and simultaneous writing
 - Pen, highlighter, eraser, shapes, undo/redo, save, and export
@@ -36,7 +37,7 @@ The goal is equal peer collaboration: everyone in a room can contribute to the d
 - Initial navigation for Home, Discussion Rooms, Resources, and Settings (labels and destinations will evolve)
 - Student-focused sign-in and account-creation UI with no teacher/student role selector
 
-The current authentication screen is UI only. Authentication, age-band matching, video, whiteboard synchronization, and cloud persistence are not yet connected.
+The current authentication screen is UI only. Authentication, video, whiteboard synchronization, and cloud persistence are not yet connected to the app screens.
 
 ## Technology direction
 
@@ -45,7 +46,7 @@ The current authentication screen is UI only. Authentication, age-band matching,
 - Firebase Authentication, Cloud Firestore, and Cloud Storage
 - Feature-first project structure
 
-Students choose rooms themselves; CLASSRUSH does not automatically assign them to groups. Room discovery should show useful public room details without exposing personal contact information. Add age-appropriate privacy controls, reporting/blocking, room moderation tools, and safeguards for live participation.
+Students choose rooms themselves; CLASSRUSH does not automatically assign them to groups. Room discovery should show useful room details without exposing personal contact information. Add age-appropriate privacy controls, reporting/blocking, room moderation tools, and safeguards for live participation.
 
 Service credentials and environment-specific configuration must be supplied securely; never commit API secrets or private keys.
 
@@ -68,7 +69,7 @@ flutter build apk --release
 ## Development roadmap
 
 1. Flutter platform scaffolding, app shell, navigation, and responsive UI
-2. Single account flow and privacy-conscious student profiles
+2. Single account flow and student profiles
 3. Open discussion-room discovery, room creation, and joining by choice
 4. Live audio/video, participant rail, chat, and screen sharing
 5. Realtime collaborative whiteboard and named cursors
