@@ -99,7 +99,7 @@ service cloud.firestore {
         allow create: if signedIn()
           && request.auth.uid == memberUid
           && hasProfile()
-          && get(/databases/$(database)/documents/rooms/$(roomId)).data.ageBand
+          && getAfter(/databases/$(database)/documents/rooms/$(roomId)).data.ageBand
             == myProfile().ageBand
           && request.resource.data.uid == request.auth.uid
           && request.resource.data.keys().hasOnly([
