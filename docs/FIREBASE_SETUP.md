@@ -1,6 +1,6 @@
 # Firebase setup for CLASSRUSH
 
-This repository now includes the FlutterFire packages, a Firestore room model/repository, security rules, and query indexes. It is **not connected to a Firebase project yet**.
+This repository includes the FlutterFire packages, a Firestore room model/repository, security rules, and query indexes. It is **not connected to a Firebase project yet**.
 
 ## 1. Create the Firebase project
 
@@ -38,15 +38,14 @@ firebase use YOUR_FIREBASE_PROJECT_ID
 firebase deploy --only firestore:rules,firestore:indexes
 ```
 
-The repository's `firestore.rules` restricts room discovery to signed-in students in the same broad age band. Profiles are private to their owner. The app stores only an age band (13–15 or 16–17), not a public date of birth.
+Profiles are private to their owner. Room discovery is available to signed-in users and is not filtered by age group. Open rooms do not have a fixed participant limit; participants are counted for display.
 
 ## 5. Current integration boundary
 
 - `DiscussionRoomRepository` supports live open-room queries, room creation, joining, and leaving.
 - Room creation and joining require an authenticated account and a profile document at `profiles/{uid}`.
-- Profile fields: `displayName`, `ageBand`, `createdAt`, `updatedAt`.
-- Supported age bands: `13-15` and `16-17`.
-- Room membership is capped at 8 and updated with Firestore transactions.
+- Profile fields: `displayName`, `createdAt`, `updatedAt`.
+- Room membership count is updated with Firestore transactions; there is no configured maximum room size.
 - The existing room screen still displays preview data until authentication/profile setup is wired into the app.
 
 Before enabling public room discovery, add reporting, blocking, moderation, and a clear room safety process. Do not put email addresses, phone numbers, exact birth dates, or other contact details in room documents.
