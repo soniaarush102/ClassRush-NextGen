@@ -4,7 +4,6 @@
       "collectionGroup": "rooms",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "ageBand", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
@@ -13,7 +12,6 @@
       "collectionGroup": "rooms",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "ageBand", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "topic", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
