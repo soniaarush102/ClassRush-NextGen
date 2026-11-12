@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_theme.dart';
-import '../features/dashboard/presentation/dashboard_screen.dart';
+import '../features/auth/presentation/auth_screen.dart';
 
 class ClassRushApp extends StatelessWidget {
   const ClassRushApp({super.key});
@@ -14,7 +14,7 @@ class ClassRushApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
-      home: const DashboardScreen(),
+      home: const AuthScreen(),
     );
   }
 }
