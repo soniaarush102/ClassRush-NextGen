@@ -23,10 +23,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ ! -d android ]; then
+          if [ ! -f android/settings.gradle ] && [ ! -f android/settings.gradle.kts ]; then
             TEMP_PROJECT="$(mktemp -d)/classrush_android"
             flutter create --platforms=android --org com.classrush --project-name app "$TEMP_PROJECT"
-            cp -R "$TEMP_PROJECT/android" ./android
+            mkdir -p android
+            cp -R "$TEMP_PROJECT/android/." ./android/
           fi
 
       - name: Configure Firebase Google Services plugin
