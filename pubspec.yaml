@@ -1,5 +1,5 @@
 name: classrush
-description: A collaborative online classroom for teachers and students.
+description: A peer-to-peer mathematics discussion and collaboration app.
 publish_to: "none"
 version: 1.0.0+1
 
@@ -11,6 +11,9 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  firebase_core: ^5.1.0
+  firebase_auth: ^7.0.1
+  cloud_firestore: ^7.1.0
 
 dev_dependencies:
   flutter_test:
