@@ -159,7 +159,7 @@ class _DashboardContent extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Teach, collaborate and learn together in real time.',
+                'Discuss ideas, solve problems and learn with peers in real time.',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -171,7 +171,7 @@ class _DashboardContent extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               Text(
-                'Your workspace',
+                'Your maths space',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w750,
                     ),
@@ -180,7 +180,7 @@ class _DashboardContent extends StatelessWidget {
               const _WorkspaceCard(),
               const SizedBox(height: 28),
               Text(
-                'Coming into focus',
+                'Explore CLASSRUSH',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w750,
                     ),
@@ -260,11 +260,11 @@ class _WorkspaceCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Collaborative classroom',
+                    'Collaborative maths room',
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                   ),
                   SizedBox(height: 5),
-                  Text('A shared space for live lessons and ideas.'),
+                  Text('A shared space for live problem-solving and discussion.'),
                 ],
               ),
             ),
@@ -283,7 +283,7 @@ class _FeatureGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     const features = [
       (Icons.draw_outlined, 'Live whiteboard', 'Write and solve together'),
-      (Icons.video_call_outlined, 'Live classroom', 'Face-to-face lessons'),
+      (Icons.video_call_outlined, 'Live classroom', 'Discuss face to face'),
       (Icons.picture_as_pdf_outlined, 'PDF & slides', 'Present and annotate'),
       (Icons.forum_outlined, 'Class chat', 'Keep every discussion close'),
     ];
