@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../rooms/presentation/open_rooms_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -43,11 +44,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onCreateClass: _showCreateRoom,
         onJoinClass: _showBrowseRooms,
       ),
-      const _PlaceholderPage(
-        icon: Icons.groups_rounded,
-        title: 'Discussion rooms',
-        subtitle: 'Browse open maths discussions, or create a room for others to join.',
-      ),
+      const OpenRoomsScreen(),
       const _PlaceholderPage(
         icon: Icons.video_library_rounded,
         title: 'Saved work',
@@ -56,7 +53,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       const _PlaceholderPage(
         icon: Icons.settings_rounded,
         title: 'Settings',
-        subtitle: 'Account, appearance and classroom preferences.',
+        subtitle: 'Account, appearance and discussion preferences.',
       ),
     ];
 
@@ -98,11 +95,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _showCreateRoom() {
-    _showMessage('Room creation will let you set a maths topic and invite other students.');
+    setState(() => _selectedIndex = 1);
   }
 
   void _showBrowseRooms() {
-    _showMessage('Open-room discovery will show maths discussions you can choose to join.');
+    setState(() => _selectedIndex = 1);
   }
 
   void _showMessage(String message) {
@@ -151,7 +148,7 @@ class _DashboardContent extends StatelessWidget {
               ),
               const SizedBox(height: 36),
               Text(
-                'Your classroom,\nwithout boundaries.',
+                'Your maths community,\nwithout boundaries.',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                       height: 1.12,
