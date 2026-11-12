@@ -19,7 +19,6 @@ class _OpenRoomsScreenState extends State<OpenRoomsScreen> {
       topic: 'Number Theory',
       description: 'Explore congruences, remainders and clever olympiad tricks.',
       participants: 4,
-      capacity: 8,
       level: 'Olympiad',
       host: 'Maths Explorer',
     ),
@@ -28,7 +27,6 @@ class _OpenRoomsScreenState extends State<OpenRoomsScreen> {
       topic: 'Geometry',
       description: 'Bring a geometry problem and work through it together.',
       participants: 3,
-      capacity: 6,
       level: 'All levels',
       host: 'Euclid Club',
     ),
@@ -259,7 +257,6 @@ class _OpenRoomsScreenState extends State<OpenRoomsScreen> {
                         ? 'An open maths discussion. Join and share your ideas.'
                         : descriptionController.text.trim(),
                     participants: 1,
-                    capacity: 8,
                     level: 'All levels',
                     host: 'You',
                   ),
@@ -294,7 +291,6 @@ class _RoomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final available = room.participants < room.capacity;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -327,8 +323,8 @@ class _RoomCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 FilledButton(
-                  onPressed: available ? onJoin : null,
-                  child: Text(available ? 'Join' : 'Full'),
+                  onPressed: onJoin,
+                  child: const Text('Join'),
                 ),
               ],
             ),
@@ -338,7 +334,7 @@ class _RoomCard extends StatelessWidget {
               runSpacing: 8,
               children: [
                 _RoomMeta(icon: Icons.category_outlined, label: room.topic),
-                _RoomMeta(icon: Icons.people_outline, label: '${room.participants}/${room.capacity}'),
+                _RoomMeta(icon: Icons.people_outline, label: '${room.participants} participants'),
                 _RoomMeta(icon: Icons.school_outlined, label: room.level),
                 _RoomMeta(icon: Icons.person_outline, label: 'Started by ${room.host}'),
               ],
@@ -402,7 +398,6 @@ class _DiscussionRoom {
     required this.topic,
     required this.description,
     required this.participants,
-    required this.capacity,
     required this.level,
     required this.host,
   });
@@ -411,7 +406,6 @@ class _DiscussionRoom {
   final String topic;
   final String description;
   final int participants;
-  final int capacity;
   final String level;
   final String host;
 }
