@@ -1,47 +1,50 @@
 # CLASSRUSH
 
-**A collaborative online classroom for teachers and students.**
+**A peer-to-peer mathematics discussion and collaboration platform for students of similar age groups.**
 
-CLASSRUSH is being developed as a genuine Flutter application, starting with Android and keeping the architecture ready for iOS and Windows.
+CLASSRUSH is being developed as a Flutter application, starting with Android and keeping the architecture ready for iOS and Windows.
 
 ## Product direction
 
-- Teacher and student accounts, profiles, and classroom management
-- Create, join, and schedule live classes
-- LiveKit-powered audio/video classrooms, participant controls, raise hand, chat, and screen sharing
-- Collaborative infinite whiteboard with named live cursors and simultaneous drawing
-- Pen, highlighter, eraser, shapes, undo/redo, permissions, save, and export
+- One common student account type; no teacher/student role split
+- Peer discovery and maths discussion spaces organized around age bands or learning stages
+- Create and join maths discussion rooms
+- Live audio/video, participant controls, chat, and optional screen sharing
+- Collaborative whiteboard with named live cursors and simultaneous writing
+- Pen, highlighter, eraser, shapes, undo/redo, save, and export
 - PDF viewing and annotation with synchronized pages
-- PPT/PPTX/PDF presentation and slide navigation
-- Math-focused writing and diagram tools
-- Secure persistence and classroom permissions using Firebase services
-- Light and dark themes with CLASSRUSH orange-and-white branding
+- Presentation and problem-sheet sharing
+- Mathematics-focused writing and diagram tools
+- Privacy-conscious profiles, room permissions, and community safety controls
 
-## Classroom layout
+## Core discussion-room layout
 
-The primary teaching layout is designed around:
-- **70% workspace:** whiteboard, slides, PDF, or shared screen
-- **30% participant rail:** vertically stacked video tiles, with the teacher first
-- Named participant cursors, active-speaker state, and classroom controls
+The main room is designed around:
+- **70% workspace:** shared whiteboard, problem sheet, PDF, or presentation
+- **30% participant rail:** video tiles for students in the discussion
+- Named participant cursors, active-speaker state, and shared room controls
+
+The goal is equal peer collaboration: everyone in a room can contribute to the discussion and shared workspace according to the room's permissions.
 
 ## Current implementation
 
-The first Flutter foundation is in place:
-- Material 3 app entry point
+- Material 3 Flutter app entry point
 - Responsive dashboard shell
 - Orange-and-white brand theme
 - System-aware light and dark themes
-- Home, Classes, Recordings, and Settings navigation
-- Create-class and join-class entry points (service integration is the next phase)
+- Initial navigation for Home, Discussion Rooms, Resources, and Settings (labels and destinations will evolve)
+- Student-focused sign-in and account-creation UI with no teacher/student role selector
 
-The dashboard is a starting implementation, not a claim that video, whiteboard synchronization, authentication, or cloud persistence are already connected.
+The current authentication screen is UI only. Authentication, age-band matching, video, whiteboard synchronization, and cloud persistence are not yet connected.
 
 ## Technology direction
 
 - Flutter and Dart
 - LiveKit for real-time audio/video
 - Firebase Authentication, Cloud Firestore, and Cloud Storage
-- Feature-first project structure with separated app, theme, and feature layers
+- Feature-first project structure
+
+Age matching should use broad age bands or learning stages rather than displaying exact birth dates. Profiles should avoid exposing personal contact details. Room discovery, messaging, and live participation will need age-appropriate privacy and safety controls.
 
 Service credentials and environment-specific configuration must be supplied securely; never commit API secrets or private keys.
 
@@ -64,11 +67,12 @@ flutter build apk --release
 ## Development roadmap
 
 1. Flutter platform scaffolding, app shell, navigation, and responsive UI
-2. Authentication, user roles, profiles, and classroom lifecycle
-3. LiveKit classroom: audio/video, screen share, participant rail, chat, and raise hand
-4. Realtime collaborative whiteboard and named cursors
-5. Math tools, PDF annotation, and presentation import
-6. Firebase persistence, permissions, recording workflow, QA, and release builds
+2. Single account flow and privacy-conscious student profiles
+3. Peer discovery and age-band discussion-room matching
+4. Live audio/video, participant rail, chat, and screen sharing
+5. Realtime collaborative whiteboard and named cursors
+6. Math tools, PDF annotation, and presentation sharing
+7. Privacy/safety controls, persistence, QA, and release builds
 
 ## Repository
 
