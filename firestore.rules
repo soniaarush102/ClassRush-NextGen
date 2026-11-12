@@ -18,11 +18,6 @@ service cloud.firestore {
       return get(profilePath(request.auth.uid)).data;
     }
 
-    function sameAgeBand(roomData) {
-      return hasProfile() &&
-        roomData.ageBand == myProfile().ageBand;
-    }
-
     function memberPath(roomId, uid) {
       return /databases/$(database)/documents/rooms/$(roomId)/members/$(uid);
     }
@@ -32,39 +27,33 @@ service cloud.firestore {
       allow create, update: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.keys().hasOnly([
-          'displayName', 'ageBand', 'createdAt', 'updatedAt'
+          'displayName', 'createdAt', 'updatedAt'
         ])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() >= 2
-        && request.resource.data.displayName.size() <= 24
-        && request.resource.data.ageBand in ['13-15', '16-17'];
+        && request.resource.data.displayName.size() <= 24;
       allow delete: if signedIn() && request.auth.uid == uid;
     }
 
     match /rooms/{roomId} {
       allow read: if signedIn() && (
-        (resource.data.status == 'open' && sameAgeBand(resource.data)) ||
+        resource.data.status == 'open' ||
         exists(memberPath(roomId, request.auth.uid))
       );
 
       allow create: if signedIn()
         && hasProfile()
         && request.resource.data.hostUid == request.auth.uid
-        && request.resource.data.ageBand == myProfile().ageBand
         && request.resource.data.participantCount == 1
-        && request.resource.data.maxParticipants >= 2
-        && request.resource.data.maxParticipants <= 8
         && request.resource.data.status == 'open'
         && request.resource.data.keys().hasOnly([
           'title', 'topic', 'description', 'hostUid', 'hostName',
-          'ageBand', 'participantCount', 'maxParticipants',
-          'status', 'createdAt', 'updatedAt'
+          'participantCount', 'status', 'createdAt', 'updatedAt'
         ]);
 
       allow update: if signedIn() && (
         (
-          sameAgeBand(resource.data)
-          && request.resource.data.diff(resource.data).affectedKeys()
+          request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['participantCount', 'updatedAt'])
           && request.resource.data.participantCount
             == resource.data.participantCount + 1
@@ -93,14 +82,15 @@ service cloud.firestore {
 
       match /members/{memberUid} {
         allow read: if signedIn() &&
-          (sameAgeBand(get(/databases/$(database)/documents/rooms/$(roomId)).data)
+          (exists(memberPath(roomId, request.auth.uid))
             || request.auth.uid == memberUid);
 
         allow create: if signedIn()
           && request.auth.uid == memberUid
           && hasProfile()
-          && getAfter(/databases/$(database)/documents/rooms/$(roomId)).data.ageBand
-            == myProfile().ageBand
+          && existsAfter(/databases/$(database)/documents/rooms/$(roomId))
+          && getAfter(/databases/$(database)/documents/rooms/$(roomId)).data.status
+            == 'open'
           && request.resource.data.uid == request.auth.uid
           && request.resource.data.keys().hasOnly([
             'uid', 'displayName', 'joinedAt'
