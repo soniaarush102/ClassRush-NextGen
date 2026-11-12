@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 
-enum AccountRole { teacher, student }
-
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
 
@@ -21,7 +19,6 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _isCreatingAccount = false;
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
-  AccountRole _role = AccountRole.student;
 
   @override
   void dispose() {
@@ -37,7 +34,7 @@ class _AuthScreenState extends State<AuthScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          'The sign-in interface is ready. Secure account connection is the next step.',
+          'The account interface is ready. Secure account connection is the next step.',
         ),
       ),
     );
@@ -88,10 +85,10 @@ class _AuthScreenState extends State<AuthScreen> {
         children: [
           const _Brand(),
           const Spacer(),
-          const Icon(Icons.draw_rounded, color: Colors.white, size: 64),
+          const Icon(Icons.functions_rounded, color: Colors.white, size: 64),
           const SizedBox(height: 28),
           Text(
-            'A better way\nto learn together.',
+            'Think together.\nSolve anything.',
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
@@ -100,7 +97,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
           const SizedBox(height: 18),
           Text(
-            'Meet live. Write together. Make every lesson interactive.',
+            'A place for students to discuss mathematics, share ideas and solve problems together.',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Colors.white.withValues(alpha: 0.92),
                   height: 1.5,
@@ -108,18 +105,18 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
           const Spacer(),
           const _BenefitRow(
+            icon: Icons.groups_outlined,
+            text: 'Discuss maths with peers',
+          ),
+          const SizedBox(height: 16),
+          const _BenefitRow(
+            icon: Icons.draw_rounded,
+            text: 'Solve problems on a shared whiteboard',
+          ),
+          const SizedBox(height: 16),
+          const _BenefitRow(
             icon: Icons.video_call_outlined,
-            text: 'Live video classrooms',
-          ),
-          const SizedBox(height: 16),
-          const _BenefitRow(
-            icon: Icons.gesture_rounded,
-            text: 'One shared collaborative whiteboard',
-          ),
-          const SizedBox(height: 16),
-          const _BenefitRow(
-            icon: Icons.picture_as_pdf_outlined,
-            text: 'Slides, PDFs and lesson resources',
+            text: 'Talk, share ideas and learn together',
           ),
         ],
       ),
@@ -139,7 +136,7 @@ class _AuthScreenState extends State<AuthScreen> {
               const _Brand(),
               const SizedBox(height: 30),
               Text(
-                _isCreatingAccount ? 'Create your account' : 'Welcome back',
+                _isCreatingAccount ? 'Join the community' : 'Welcome back',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -147,42 +144,15 @@ class _AuthScreenState extends State<AuthScreen> {
               const SizedBox(height: 8),
               Text(
                 _isCreatingAccount
-                    ? 'Join CLASSRUSH and start learning together.'
-                    : 'Sign in to continue to your classroom.',
+                    ? 'Create one account and start discussing mathematics.'
+                    : 'Sign in and continue your maths discussions.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
               ),
               const SizedBox(height: 24),
-              Text(
-                'I am joining as a',
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _RoleChoice(
-                      title: 'Student',
-                      icon: Icons.school_outlined,
-                      selected: _role == AccountRole.student,
-                      onTap: () => setState(() => _role = AccountRole.student),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _RoleChoice(
-                      title: 'Teacher',
-                      icon: Icons.cast_for_education_outlined,
-                      selected: _role == AccountRole.teacher,
-                      onTap: () => setState(() => _role = AccountRole.teacher),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
               if (_isCreatingAccount) ...[
-                _FieldLabel('Full name'),
+                const _FieldLabel('Your name'),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameController,
@@ -197,7 +167,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 16),
               ],
-              _FieldLabel('Email address'),
+              const _FieldLabel('Email address'),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _emailController,
@@ -216,7 +186,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              _FieldLabel('Password'),
+              const _FieldLabel('Password'),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _passwordController,
@@ -245,7 +215,7 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               if (_isCreatingAccount) ...[
                 const SizedBox(height: 16),
-                _FieldLabel('Confirm password'),
+                const _FieldLabel('Confirm password'),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _confirmController,
@@ -293,18 +263,18 @@ class _AuthScreenState extends State<AuthScreen> {
                 children: [
                   Text(_isCreatingAccount
                       ? 'Already have an account?'
-                      : "Don't have an account?"),
+                      : "New to CLASSRUSH?"),
                   TextButton(
                     onPressed: () => setState(
                       () => _isCreatingAccount = !_isCreatingAccount,
                     ),
-                    child: Text(_isCreatingAccount ? 'Sign in' : 'Create one'),
+                    child: Text(_isCreatingAccount ? 'Sign in' : 'Create account'),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
-                'By continuing, you agree to use CLASSRUSH responsibly and follow your school or classroom rules.',
+                'CLASSRUSH is a peer learning space. Keep personal information private and follow community guidelines.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -350,50 +320,6 @@ class _Brand extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.1),
         ),
       ],
-    );
-  }
-}
-
-class _RoleChoice extends StatelessWidget {
-  const _RoleChoice({
-    required this.title,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = selected
-        ? AppTheme.brandOrange
-        : Theme.of(context).colorScheme.outlineVariant;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(15),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppTheme.brandOrange.withValues(alpha: 0.09)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: color, width: selected ? 1.6 : 1),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: selected ? AppTheme.brandOrange : null),
-            const SizedBox(height: 6),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-          ],
-        ),
-      ),
     );
   }
 }
