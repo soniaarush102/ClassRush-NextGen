@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../dashboard/presentation/dashboard_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -17,6 +19,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _confirmController = TextEditingController();
 
   bool _isCreatingAccount = false;
+  bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
 
@@ -29,15 +32,84 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  void _continue() {
-    if (!_formKey.currentState!.validate()) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'The account interface is ready. Secure account connection is the next step.',
+  Future<void> _continue() async {
+    if (_isLoading || !_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final auth = FirebaseAuth.instance;
+      if (_isCreatingAccount) {
+        final credential = await auth.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+        await credential.user?.updateDisplayName(_nameController.text.trim());
+      } else {
+        await auth.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+      }
+
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(
+          builder: (_) => const DashboardScreen(),
         ),
-      ),
-    );
+        (route) => false,
+      );
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) return;
+      final message = switch (error.code) {
+        'email-already-in-use' => 'An account already exists for this email. Please sign in.',
+        'invalid-email' => 'Please enter a valid email address.',
+        'weak-password' => 'Please choose a stronger password.',
+        'user-not-found' || 'wrong-password' || 'invalid-credential' =>
+          'Email or password is incorrect.',
+        'user-disabled' => 'This account is currently disabled.',
+        'network-request-failed' => 'Network error. Check your internet connection and try again.',
+        'operation-not-allowed' =>
+          'Email sign-in is not enabled yet. Please contact the app administrator.',
+        _ => 'Could not connect to your account. Please try again.',
+      };
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Something went wrong. Please try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter your email address first.')),
+      );
+      return;
+    }
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password reset email sent. Check your inbox.')),
+      );
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) return;
+      final message = error.code == 'user-not-found'
+          ? 'No account was found for that email.'
+          : 'Could not send the reset email. Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
   }
 
   @override
@@ -241,21 +313,26 @@ class _AuthScreenState extends State<AuthScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Password recovery will be enabled with account services.'),
-                      ),
-                    ),
+                    onPressed: _isLoading ? null : _resetPassword,
                     child: const Text('Forgot password?'),
                   ),
                 ),
               const SizedBox(height: 12),
               FilledButton(
-                onPressed: _continue,
+                onPressed: _isLoading ? null : _continue,
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 17),
                 ),
-                child: Text(_isCreatingAccount ? 'Create account' : 'Sign in'),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(_isCreatingAccount ? 'Create account' : 'Sign in'),
               ),
               const SizedBox(height: 18),
               Row(
