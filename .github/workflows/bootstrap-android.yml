@@ -2,6 +2,9 @@ name: Bootstrap Android and Build CLASSRUSH
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
