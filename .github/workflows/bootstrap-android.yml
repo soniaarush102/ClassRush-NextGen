@@ -35,77 +35,57 @@ jobs:
           set -euo pipefail
           python3 <<'PY'
           from pathlib import Path
-          import re
 
-          settings = Path("android/settings.gradle.kts")
-          app_gradle = Path("android/app/build.gradle.kts")
+          settings_kts = Path("android/settings.gradle.kts")
+          settings_groovy = Path("android/settings.gradle")
+          app_kts = Path("android/app/build.gradle.kts")
+          app_groovy = Path("android/app/build.gradle")
 
-          if settings.exists():
-              s = settings.read_text()
-              if "com.google.gms.google-services" not in s:
-                  s, count = re.subn(
-                      r"plugins\\s*\\{",
-                      lambda m: m.group(0) + '\\n    id("com.google.gms.google-services") version "4.4.4" apply false',
-                      s, count=1
+          if settings_kts.exists():
+              content = settings_kts.read_text()
+              if "com.google.gms.google-services" not in content:
+                  content = content.replace(
+                      "plugins {",
+                      'plugins {\\n    id("com.google.gms.google-services") version "4.4.4" apply false',
+                      1
                   )
-                  if count != 1:
-                      raise SystemExit("Could not safely add Google Services plugin to settings.gradle.kts")
-                  settings.write_text(s)
+                  settings_kts.write_text(content)
+          elif settings_groovy.exists():
+              content = settings_groovy.read_text()
+              if "com.google.gms.google-services" not in content:
+                  content = content.replace(
+                      "plugins {",
+                      "plugins {\\n    id 'com.google.gms.google-services' version '4.4.4' apply false",
+                      1
+                  )
+                  settings_groovy.write_text(content)
           else:
-              settings = Path("android/settings.gradle")
-              if not settings.exists():
-                  raise SystemExit("Flutter Android settings Gradle file was not generated")
-              s = settings.read_text()
-              if "com.google.gms.google-services" not in s:
-                  s, count = re.subn(
-                      r"plugins\\s*\\{",
-                      lambda m: m.group(0) + "\\n    id 'com.google.gms.google-services' version '4.4.4' apply false",
-                      s, count=1
-                  )
-                  if count != 1:
-                      raise SystemExit("Could not safely add Google Services plugin to settings.gradle")
-                  settings.write_text(s)
+              raise SystemExit("Android settings Gradle file was not generated")
 
-          if app_gradle.exists():
-              s = app_gradle.read_text()
-              if 'id("com.google.gms.google-services")' not in s:
-                  s, count = re.subn(
-                      r"plugins\\s*\\{",
-                      lambda m: m.group(0) + '\\n    id("com.google.gms.google-services")',
-                      s, count=1
+          if app_kts.exists():
+              content = app_kts.read_text()
+              if "com.google.gms.google-services" not in content:
+                  content = content.replace(
+                      "plugins {",
+                      'plugins {\\n    id("com.google.gms.google-services")',
+                      1
                   )
-                  if count != 1:
-                      raise SystemExit("Could not safely apply Google Services plugin in app build.gradle.kts")
-                  app_gradle.write_text(s)
-              if 'applicationId = "com.classrush.app"' not in s:
-                  s, count = re.subn(
-                      r'applicationId\\s*=\\s*"[^"]+"',
-                      'applicationId = "com.classrush.app"', s, count=1
+              if 'applicationId = "com.classrush.app"' not in content:
+                  raise SystemExit("Generated Android applicationId is not com.classrush.app")
+              app_kts.write_text(content)
+          elif app_groovy.exists():
+              content = app_groovy.read_text()
+              if "com.google.gms.google-services" not in content:
+                  content = content.replace(
+                      "plugins {",
+                      "plugins {\\n    id 'com.google.gms.google-services'",
+                      1
                   )
-                  if count != 1:
-                      raise SystemExit("Could not set Android applicationId in app build.gradle.kts")
-                  app_gradle.write_text(s)
+              if "applicationId 'com.classrush.app'" not in content and 'applicationId "com.classrush.app"' not in content:
+                  raise SystemExit("Generated Android applicationId is not com.classrush.app")
+              app_groovy.write_text(content)
           else:
-              app_gradle = Path("android/app/build.gradle")
-              if not app_gradle.exists():
-                  raise SystemExit("Flutter app Gradle file was not generated")
-              s = app_gradle.read_text()
-              if "com.google.gms.google-services" not in s:
-                  s, count = re.subn(
-                      r"plugins\\s*\\{",
-                      lambda m: m.group(0) + "\\n    id 'com.google.gms.google-services'",
-                      s, count=1
-                  )
-                  if count != 1:
-                      raise SystemExit("Could not safely apply Google Services plugin in app build.gradle")
-                  s = s
-              s, count = re.subn(
-                  r"applicationId\\s+['\"][^'\"]+['\"]",
-                  "applicationId 'com.classrush.app'", s, count=1
-              )
-              if count != 1:
-                  raise SystemExit("Could not set Android applicationId in app build.gradle")
-              app_gradle.write_text(s)
+              raise SystemExit("Android app Gradle file was not generated")
           PY
 
       - name: Verify Firebase Android configuration
@@ -135,20 +115,6 @@ jobs:
 
       - name: Build Android debug APK
         run: flutter build apk --debug
-
-      - name: Commit generated Android platform files
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add android
-          if ! git diff --cached --quiet; then
-            git commit -m "Generate Android platform and configure Firebase"
-            git push
-          else
-            echo "Android platform files are already committed."
-          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
