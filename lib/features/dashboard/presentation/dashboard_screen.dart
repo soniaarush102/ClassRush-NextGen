@@ -21,12 +21,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     NavigationDestination(
       icon: Icon(Icons.groups_outlined),
       selectedIcon: Icon(Icons.groups_rounded),
-      label: 'Classes',
+      label: 'Discussion Rooms',
     ),
     NavigationDestination(
       icon: Icon(Icons.video_library_outlined),
       selectedIcon: Icon(Icons.video_library_rounded),
-      label: 'Recordings',
+      label: 'Saved Work',
     ),
     NavigationDestination(
       icon: Icon(Icons.settings_outlined),
@@ -40,18 +40,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isWide = MediaQuery.sizeOf(context).width >= 900;
     final pages = [
       _DashboardContent(
-        onCreateClass: _showCreateClass,
-        onJoinClass: _showJoinClass,
+        onCreateClass: _showCreateRoom,
+        onJoinClass: _showBrowseRooms,
       ),
       const _PlaceholderPage(
         icon: Icons.groups_rounded,
-        title: 'Your classes',
-        subtitle: 'Classes you create or join will appear here.',
+        title: 'Discussion rooms',
+        subtitle: 'Browse open maths discussions, or create a room for others to join.',
       ),
       const _PlaceholderPage(
         icon: Icons.video_library_rounded,
-        title: 'Class recordings',
-        subtitle: 'Saved lesson recordings will appear here.',
+        title: 'Saved work',
+        subtitle: 'Your saved whiteboards and discussion materials will appear here.',
       ),
       const _PlaceholderPage(
         icon: Icons.settings_rounded,
@@ -97,12 +97,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _showCreateClass() {
-    _showMessage('Class creation will be connected to the classroom service.');
+  void _showCreateRoom() {
+    _showMessage('Room creation will let you set a maths topic and invite other students.');
   }
 
-  void _showJoinClass() {
-    _showMessage('Class joining will be connected to classroom IDs and links.');
+  void _showBrowseRooms() {
+    _showMessage('Open-room discovery will show maths discussions you can choose to join.');
   }
 
   void _showMessage(String message) {
@@ -173,7 +173,7 @@ class _DashboardContent extends StatelessWidget {
               Text(
                 'Your maths space',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w750,
+                      fontWeight: FontWeight.w700,
                     ),
               ),
               const SizedBox(height: 14),
@@ -182,7 +182,7 @@ class _DashboardContent extends StatelessWidget {
               Text(
                 'Explore CLASSRUSH',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w750,
+                      fontWeight: FontWeight.w700,
                     ),
               ),
               const SizedBox(height: 14),
@@ -213,7 +213,7 @@ class _QuickActions extends StatelessWidget {
         FilledButton.icon(
           onPressed: onCreateClass,
           icon: const Icon(Icons.add_rounded),
-          label: const Text('Create a class'),
+          label: const Text('Create a room'),
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           ),
@@ -221,7 +221,7 @@ class _QuickActions extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: onJoinClass,
           icon: const Icon(Icons.meeting_room_outlined),
-          label: const Text('Join with a code'),
+          label: const Text('Find open rooms'),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           ),
