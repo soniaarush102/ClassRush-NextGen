@@ -43,7 +43,13 @@ class _AuthScreenState extends State<AuthScreen> {
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
-        await credential.user?.updateDisplayName(_nameController.text.trim());
+        // Account creation is already successful at this point. A display-name
+        // update failure must not make the user think registration failed.
+        try {
+          await credential.user?.updateDisplayName(_nameController.text.trim());
+        } on FirebaseAuthException {
+          // The account remains usable; profile details can be updated later.
+        }
       } else {
         await auth.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
@@ -75,11 +81,11 @@ class _AuthScreenState extends State<AuthScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Something went wrong. Please try again.'),
+        SnackBar(
+          content: Text('Could not complete the request (' + error.runtimeType.toString() + '). Please try again.'),
         ),
       );
     } finally {
