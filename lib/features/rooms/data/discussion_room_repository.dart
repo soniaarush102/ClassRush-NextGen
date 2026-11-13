@@ -124,10 +124,24 @@ class DiscussionRoomRepository {
   ) async {
     final uid = _uid;
     final strokeRef = _rooms.doc(roomId).collection('boardStrokes').doc();
+
+    // Firestore rules cap a stroke at 2,000 points. Touch devices can emit
+    // many pointer events during one long drag, so evenly sample long strokes
+    // while preserving their first and last points.
+    const maxStoredPoints = 1800;
+    final storedPoints = points.length <= maxStoredPoints
+        ? points
+        : List<Offset>.generate(
+            maxStoredPoints,
+            (index) => points[
+              (index * (points.length - 1) / (maxStoredPoints - 1)).round()
+            ],
+          );
+
     await strokeRef.set({
       'uid': uid,
-      'points': points.map((point) => [point.dx, point.dy]).toList(),
-      'createdAt': FieldValue.serverTimestamp(),
+      'points': storedPoints.map((point) => [point.dx, point.dy]).toList(),
+      'createdAt': Timestamp.now(),
     });
   }
 
