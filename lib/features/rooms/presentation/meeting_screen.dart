@@ -293,18 +293,32 @@ class _MeetingScreenState extends State<MeetingScreen> {
                         }
                       });
                     },
-                    onPanEnd: (_) {
+                    onPanEnd: (_) async {
                       final completedStroke = List<Offset>.from(_activeStroke);
+                      final completedColor = _activeStrokeColor;
+                      final completedWidth = _activeStrokeWidth;
                       setState(() {
-                        _activeStroke = [];
                         _strokeStart = null;
                       });
                       if (completedStroke.isNotEmpty) {
-                        _saveBoardStroke(
+                        // Keep the just-drawn stroke visible until Firestore confirms
+                        // the write. Clearing it before the stream update caused a
+                        // visible flash/disappearance on slower connections.
+                        final saved = await _saveBoardStroke(
                           completedStroke,
-                          color: _activeStrokeColor,
-                          width: _activeStrokeWidth,
+                          color: completedColor,
+                          width: completedWidth,
                         );
+                        if (saved && mounted) {
+                          setState(() {
+                            if (_activeStroke.length == completedStroke.length &&
+                                _activeStroke.isNotEmpty &&
+                                _activeStroke.first == completedStroke.first &&
+                                _activeStroke.last == completedStroke.last) {
+                              _activeStroke = [];
+                            }
+                          });
+                        }
                       }
                     },
                     child: Container(
@@ -432,7 +446,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
     );
   }
 
-  Future<void> _saveBoardStroke(
+  Future<bool> _saveBoardStroke(
     List<Offset> points, {
     required Color color,
     required double width,
@@ -444,6 +458,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
         color: color.value,
         width: width,
       );
+      return true;
     } on FirebaseException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -452,6 +467,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
           duration: const Duration(seconds: 12),
         ),
       );
+      return false;
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -460,6 +476,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
           duration: const Duration(seconds: 8),
         ),
       );
+      return false;
     }
   }
 
