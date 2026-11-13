@@ -124,9 +124,11 @@ class DiscussionRoomRepository {
       final data = snapshot.data() ?? const <String, dynamic>{};
       final count = (data['presentationSlideCount'] as num?)?.toInt() ?? 1;
       final index = (data['presentationCurrentSlide'] as num?)?.toInt() ?? 0;
+      final safeCount = count.clamp(1, 500).toInt();
+      final safeIndex = index.clamp(0, safeCount - 1).toInt();
       return {
-        'slideCount': count.clamp(1, 500),
-        'currentSlide': index.clamp(0, count.clamp(1, 500) - 1),
+        'slideCount': safeCount,
+        'currentSlide': safeIndex,
       };
     });
   }
