@@ -191,8 +191,8 @@ class _MeetingScreenState extends State<MeetingScreen> {
   Offset _normalise(Offset point, Size size) {
     if (size.width <= 0 || size.height <= 0) return Offset.zero;
     return Offset(
-      (point.dx / size.width).clamp(0.0, 1.0),
-      (point.dy / size.height).clamp(0.0, 1.0),
+      (point.dx / size.width).clamp(0.0, 1.0).toDouble(),
+      (point.dy / size.height).clamp(0.0, 1.0).toDouble(),
     );
   }
 
@@ -342,6 +342,5 @@ class _BoardPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _BoardPainter oldDelegate) =>
-      oldDelegate.strokes != strokes || oldDelegate.color != color;
+  bool shouldRepaint(covariant _BoardPainter oldDelegate) => true;
 }
