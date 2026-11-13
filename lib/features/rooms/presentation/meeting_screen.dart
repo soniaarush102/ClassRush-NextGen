@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 
 import '../data/discussion_room_repository.dart';
 
@@ -23,6 +24,7 @@ class MeetingScreen extends StatefulWidget {
 class _MeetingScreenState extends State<MeetingScreen> {
   final _repository = DiscussionRoomRepository();
   List<Offset> _activeStroke = [];
+  Offset? _strokeStart;
   String _boardTool = 'Pen';
   _MeetingMode _mode = _MeetingMode.whiteboard;
   bool _isLeaving = false;
@@ -143,6 +145,9 @@ class _MeetingScreenState extends State<MeetingScreen> {
                     DropdownMenuItem(value: 'Pen', child: Text('Pen')),
                     DropdownMenuItem(value: 'Highlighter', child: Text('Highlight')),
                     DropdownMenuItem(value: 'Eraser', child: Text('Eraser')),
+                    DropdownMenuItem(value: 'Line', child: Text('Line')),
+                    DropdownMenuItem(value: 'Rectangle', child: Text('Rectangle')),
+                    DropdownMenuItem(value: 'Circle', child: Text('Circle')),
                   ],
                   onChanged: (value) {
                     if (value != null) setState(() => _boardTool = value);
@@ -194,17 +199,26 @@ class _MeetingScreenState extends State<MeetingScreen> {
                   return GestureDetector(
                     onPanStart: (details) {
                       setState(() {
-                        _activeStroke = [_normalise(details.localPosition, size)];
+                        _strokeStart = _normalise(details.localPosition, size);
+                        _activeStroke = [_strokeStart!];
                       });
                     },
                     onPanUpdate: (details) {
                       setState(() {
-                        _activeStroke.add(_normalise(details.localPosition, size));
+                        final current = _normalise(details.localPosition, size);
+                        if (_boardTool == 'Pen' || _boardTool == 'Highlighter' || _boardTool == 'Eraser') {
+                          _activeStroke.add(current);
+                        } else {
+                          _activeStroke = _makeToolPoints(_strokeStart!, current);
+                        }
                       });
                     },
                     onPanEnd: (_) {
                       final completedStroke = List<Offset>.from(_activeStroke);
-                      setState(() => _activeStroke = []);
+                      setState(() {
+                        _activeStroke = [];
+                        _strokeStart = null;
+                      });
                       if (completedStroke.isNotEmpty) {
                         _saveBoardStroke(
                           completedStroke,
@@ -243,6 +257,29 @@ class _MeetingScreenState extends State<MeetingScreen> {
         );
       },
     );
+  }
+
+  List<Offset> _makeToolPoints(Offset start, Offset end) {
+    if (_boardTool == 'Line') return [start, end];
+    if (_boardTool == 'Rectangle') {
+      return [
+        start,
+        Offset(end.dx, start.dy),
+        end,
+        Offset(start.dx, end.dy),
+        start,
+      ];
+    }
+    if (_boardTool == 'Circle') {
+      final center = Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
+      final radiusX = (end.dx - start.dx).abs() / 2;
+      final radiusY = (end.dy - start.dy).abs() / 2;
+      return List.generate(49, (index) {
+        final angle = index * 2 * math.pi / 48;
+        return Offset(center.dx + radiusX * math.cos(angle), center.dy + radiusY * math.sin(angle));
+      });
+    }
+    return [start, end];
   }
 
   Color get _activeStrokeColor {
