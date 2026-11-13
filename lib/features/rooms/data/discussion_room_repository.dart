@@ -118,6 +118,72 @@ class DiscussionRoomRepository {
     });
   }
 
+  /// Shared presentation state for every participant in this room.
+  Stream<Map<String, int>> watchPresentationState(String roomId) {
+    return _rooms.doc(roomId).snapshots().map((snapshot) {
+      final data = snapshot.data() ?? const <String, dynamic>{};
+      final count = (data['presentationSlideCount'] as num?)?.toInt() ?? 1;
+      final index = (data['presentationCurrentSlide'] as num?)?.toInt() ?? 0;
+      return {
+        'slideCount': count.clamp(1, 500),
+        'currentSlide': index.clamp(0, count.clamp(1, 500) - 1),
+      };
+    });
+  }
+
+  /// Creates a blank slide and selects it for everyone in the meeting.
+  Future<void> createPresentationSlide(String roomId) async {
+    final uid = _uid;
+    final roomRef = _rooms.doc(roomId);
+    await _firestore.runTransaction((transaction) async {
+      final roomSnapshot = await transaction.get(roomRef);
+      if (!roomSnapshot.exists) {
+        throw const DiscussionRoomException('This room no longer exists.');
+      }
+      final memberSnapshot = await transaction.get(
+        roomRef.collection('members').doc(uid),
+      );
+      if (!memberSnapshot.exists) {
+        throw const DiscussionRoomException('Join this room before editing slides.');
+      }
+      final data = roomSnapshot.data()!;
+      final count = (data['presentationSlideCount'] as num?)?.toInt() ?? 1;
+      if (count >= 500) {
+        throw const DiscussionRoomException('A presentation can contain at most 500 slides.');
+      }
+      transaction.update(roomRef, {
+        'presentationSlideCount': count + 1,
+        'presentationCurrentSlide': count,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  /// Changes the selected slide for all participants.
+  Future<void> setCurrentPresentationSlide(String roomId, int index) async {
+    final uid = _uid;
+    final roomRef = _rooms.doc(roomId);
+    await _firestore.runTransaction((transaction) async {
+      final roomSnapshot = await transaction.get(roomRef);
+      if (!roomSnapshot.exists) {
+        throw const DiscussionRoomException('This room no longer exists.');
+      }
+      final memberSnapshot = await transaction.get(
+        roomRef.collection('members').doc(uid),
+      );
+      if (!memberSnapshot.exists) {
+        throw const DiscussionRoomException('Join this room before changing slides.');
+      }
+      final data = roomSnapshot.data()!;
+      final count = (data['presentationSlideCount'] as num?)?.toInt() ?? 1;
+      if (index < 0 || index >= count) return;
+      transaction.update(roomRef, {
+        'presentationCurrentSlide': index,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
   Future<void> addBoardStroke(
     String roomId,
     List<Offset> points, {
