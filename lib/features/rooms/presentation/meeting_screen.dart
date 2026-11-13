@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import '../data/discussion_room_repository.dart';
@@ -195,13 +196,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
                       final completedStroke = List<Offset>.from(_activeStroke);
                       setState(() => _activeStroke = []);
                       if (completedStroke.isNotEmpty) {
-                        _repository.addBoardStroke(widget.roomId, completedStroke)
-                            .catchError((_) {
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Could not sync your drawing. Check your connection and try again.')),
-                          );
-                        });
+                        _saveBoardStroke(completedStroke);
                       }
                     },
                     child: Container(
@@ -235,6 +230,28 @@ class _MeetingScreenState extends State<MeetingScreen> {
         );
       },
     );
+  }
+
+  Future<void> _saveBoardStroke(List<Offset> points) async {
+    try {
+      await _repository.addBoardStroke(widget.roomId, points);
+    } on FirebaseException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Whiteboard sync failed (${error.code}).'),
+          duration: const Duration(seconds: 8),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Whiteboard sync failed (${error.runtimeType}).'),
+          duration: const Duration(seconds: 8),
+        ),
+      );
+    }
   }
 
   Offset _normalise(Offset point, Size size) {
