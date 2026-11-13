@@ -97,6 +97,54 @@ class DiscussionRoomRepository {
     });
   }
 
+
+  /// Streams saved whiteboard strokes. Firestore snapshots keep every
+  /// participant's board in sync as new strokes are added.
+  Stream<List<Map<String, dynamic>>> watchBoardStrokes(String roomId) {
+    return _rooms.doc(roomId).collection('boardStrokes').snapshots().map((snapshot) {
+      final strokes = snapshot.docs.map((document) {
+        return <String, dynamic>{...document.data(), 'id': document.id};
+      }).toList();
+      strokes.sort((a, b) {
+        final aTime = a['createdAt'];
+        final bTime = b['createdAt'];
+        if (aTime is Timestamp && bTime is Timestamp) {
+          return aTime.compareTo(bTime);
+        }
+        return 0;
+      });
+      return strokes;
+    });
+  }
+
+  Future<void> addBoardStroke(
+    String roomId,
+    List<Offset> points,
+  ) async {
+    final uid = _uid;
+    final strokeRef = _rooms.doc(roomId).collection('boardStrokes').doc();
+    await strokeRef.set({
+      'uid': uid,
+      'points': points.map((point) => [point.dx, point.dy]).toList(),
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> deleteBoardStroke(String roomId, String strokeId) async {
+    await _rooms.doc(roomId).collection('boardStrokes').doc(strokeId).delete();
+  }
+
+  Future<void> clearBoard(String roomId) async {
+    final strokes = await _rooms.doc(roomId).collection('boardStrokes').get();
+    for (var start = 0; start < strokes.docs.length; start += 450) {
+      final batch = _firestore.batch();
+      for (final document in strokes.docs.skip(start).take(450)) {
+        batch.delete(document.reference);
+      }
+      await batch.commit();
+    }
+  }
+
   Future<String> createRoom({
     required String title,
     required String topic,
