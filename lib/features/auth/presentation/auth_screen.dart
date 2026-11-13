@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../dashboard/presentation/dashboard_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -88,13 +87,10 @@ class _AuthScreenState extends State<AuthScreen> {
         }, SetOptions(merge: true));
       }
 
+      // The app-level Firebase authentication gate observes this sign-in
+      // and automatically displays the dashboard. No manual navigation is
+      // needed, so the saved session remains the single source of truth.
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute<void>(
-          builder: (_) => const DashboardScreen(),
-        ),
-        (route) => false,
-      );
     } on FirebaseAuthException catch (error) {
       if (!mounted) return;
       final message = switch (error.code) {
