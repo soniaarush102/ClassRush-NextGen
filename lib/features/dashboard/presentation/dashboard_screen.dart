@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -50,10 +51,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: 'Saved work',
         subtitle: 'Your saved whiteboards and discussion materials will appear here.',
       ),
-      const _PlaceholderPage(
+      _PlaceholderPage(
         icon: Icons.settings_rounded,
         title: 'Settings',
         subtitle: 'Account, appearance and discussion preferences.',
+        actionLabel: 'Sign out',
+        onAction: () async {
+          await FirebaseAuth.instance.signOut();
+        },
       ),
     ];
 
@@ -327,11 +332,15 @@ class _PlaceholderPage extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.actionLabel,
+    this.onAction,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -346,6 +355,14 @@ class _PlaceholderPage extends StatelessWidget {
             Text(title, style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
             Text(subtitle, textAlign: TextAlign.center),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: onAction,
+                icon: const Icon(Icons.logout_rounded),
+                label: Text(actionLabel!),
+              ),
+            ],
           ],
         ),
       ),
