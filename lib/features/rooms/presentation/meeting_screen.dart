@@ -231,80 +231,129 @@ class _MeetingScreenState extends State<MeetingScreen> {
   }
 
   Widget _participantsPanel() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Participants',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: Column(
-              children: [
-                AspectRatio(
-                  aspectRatio: 4 / 3,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outlineVariant,
-                      ),
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _repository.watchParticipants(widget.roomId),
+      builder: (context, snapshot) {
+        final participants = snapshot.data ?? const <Map<String, dynamic>>[];
+        final myUid = FirebaseAuth.instance.currentUser?.uid;
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Participants (${participants.length})',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.videocam_off_outlined,
-                            size: 30,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Camera not connected',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: snapshot.hasError
+                    ? Center(
+                        child: Text(
+                          'Could not load participants.',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 14,
-                      child: Text(
-                        _myName.isEmpty ? '?' : _myName[0].toUpperCase(),
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '$_myName (you)',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Video and microphone calling will be connected after a real-time call provider is configured.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
+                      )
+                    : !snapshot.hasData
+                        ? const Center(child: CircularProgressIndicator())
+                        : participants.isEmpty
+                            ? Center(
+                                child: Text(
+                                  'No participants yet.',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              )
+                            : ListView.separated(
+                                itemCount: participants.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 10),
+                                itemBuilder: (context, index) {
+                                  final participant = participants[index];
+                                  final uid =
+                                      participant['uid'] as String? ?? '';
+                                  final name =
+                                      participant['displayName'] as String? ??
+                                          'Member';
+                                  final isMe = uid == myUid;
+                                  final initial =
+                                      name.trim().isEmpty ? 'M' : name.trim()[0];
+
+                                  return Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .outlineVariant,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.videocam_off_outlined,
+                                          size: 26,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          children: [
+                                            CircleAvatar(
+                                              radius: 13,
+                                              child: Text(
+                                                initial.toUpperCase(),
+                                                style: const TextStyle(
+                                                    fontSize: 11),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: Text(
+                                                isMe ? '$name (you)' : name,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 3),
+                                        Text(
+                                          'Camera not connected',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelSmall,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Participant list updates live. Video and microphone calling are not connected yet.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
