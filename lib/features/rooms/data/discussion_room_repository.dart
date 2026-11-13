@@ -266,6 +266,8 @@ class DiscussionRoomRepository {
         'hostUid': uid,
         'hostName': displayName,
         'participantCount': 1,
+        'presentationSlideCount': 1,
+        'presentationCurrentSlide': 0,
         'status': 'open',
         'createdAt': now,
         'updatedAt': now,
