@@ -27,6 +27,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
   Offset? _strokeStart;
   String _boardTool = 'Pen';
   Color _penColor = Colors.black;
+  double _penWidth = 3;
   _MeetingMode _mode = _MeetingMode.whiteboard;
   bool _isLeaving = false;
 
@@ -225,6 +226,48 @@ class _MeetingScreenState extends State<MeetingScreen> {
                       ],
                     ),
                   ),
+                if (_boardTool == 'Pen' || _boardTool == 'Line' ||
+                    _boardTool == 'Rectangle' || _boardTool == 'Circle')
+                  PopupMenuButton<double>(
+                    tooltip: 'Pen thickness',
+                    initialValue: _penWidth,
+                    onSelected: (width) => setState(() => _penWidth = width),
+                    itemBuilder: (context) => [1.5, 2.0, 3.0, 5.0, 8.0, 12.0]
+                        .map((width) => PopupMenuItem<double>(
+                              value: width,
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 34,
+                                    child: Center(
+                                      child: Container(
+                                        width: 28,
+                                        height: width,
+                                        decoration: BoxDecoration(
+                                          color: _penColor,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text('${width.toStringAsFixed(width % 1 == 0 ? 0 : 1)} px'),
+                                  if (_penWidth == width) ...[
+                                    const Spacer(),
+                                    const Icon(Icons.check, size: 16),
+                                  ],
+                                ],
+                              ),
+                            ))
+                        .toList(),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.line_weight),
+                        const Icon(Icons.arrow_drop_down),
+                      ],
+                    ),
+                  ),
                 const Spacer(),
                 const Text('Shared Whiteboard'),
               ],
@@ -339,7 +382,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
   double get _activeStrokeWidth {
     if (_boardTool == 'Eraser') return 20;
     if (_boardTool == 'Highlighter') return 12;
-    return 3;
+    return _penWidth;
   }
 
   _BoardStroke _decodeStroke(Map<String, dynamic> stroke) {
