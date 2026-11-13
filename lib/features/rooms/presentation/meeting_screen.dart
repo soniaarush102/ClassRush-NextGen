@@ -23,6 +23,7 @@ class MeetingScreen extends StatefulWidget {
 class _MeetingScreenState extends State<MeetingScreen> {
   final _repository = DiscussionRoomRepository();
   List<Offset> _activeStroke = [];
+  String _boardTool = 'Pen';
   _MeetingMode _mode = _MeetingMode.whiteboard;
   bool _isLeaving = false;
 
@@ -119,25 +120,34 @@ class _MeetingScreenState extends State<MeetingScreen> {
       stream: _repository.watchBoardStrokes(widget.roomId),
       builder: (context, snapshot) {
         final savedStrokes = (snapshot.data ?? const <Map<String, dynamic>>[])
-            .map((stroke) {
-          final rawPoints = stroke['points'] as List<dynamic>? ?? [];
-          return rawPoints.map((rawPoint) {
-            final pair = rawPoint as List<dynamic>;
-            return Offset(
-              (pair[0] as num).toDouble(),
-              (pair[1] as num).toDouble(),
-            );
-          }).toList();
-        }).toList();
+            .map(_decodeStroke)
+            .toList();
         final allStrokes = [
           ...savedStrokes,
-          if (_activeStroke.isNotEmpty) _activeStroke,
+          if (_activeStroke.isNotEmpty)
+            _BoardStroke(
+              points: _activeStroke,
+              color: _activeStrokeColor,
+              width: _activeStrokeWidth,
+            ),
         ];
 
         return Column(
           children: [
             Row(
               children: [
+                DropdownButton<String>(
+                  value: _boardTool,
+                  underline: const SizedBox.shrink(),
+                  items: const [
+                    DropdownMenuItem(value: 'Pen', child: Text('Pen')),
+                    DropdownMenuItem(value: 'Highlighter', child: Text('Highlight')),
+                    DropdownMenuItem(value: 'Eraser', child: Text('Eraser')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setState(() => _boardTool = value);
+                  },
+                ),
                 IconButton(
                   tooltip: 'Undo last stroke',
                   onPressed: savedStrokes.isEmpty
@@ -196,7 +206,11 @@ class _MeetingScreenState extends State<MeetingScreen> {
                       final completedStroke = List<Offset>.from(_activeStroke);
                       setState(() => _activeStroke = []);
                       if (completedStroke.isNotEmpty) {
-                        _saveBoardStroke(completedStroke);
+                        _saveBoardStroke(
+                          completedStroke,
+                          color: _activeStrokeColor,
+                          width: _activeStrokeWidth,
+                        );
                       }
                     },
                     child: Container(
@@ -209,7 +223,6 @@ class _MeetingScreenState extends State<MeetingScreen> {
                       child: CustomPaint(
                         painter: _BoardPainter(
                           strokes: allStrokes,
-                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                         child: const SizedBox.expand(),
                       ),
@@ -232,9 +245,47 @@ class _MeetingScreenState extends State<MeetingScreen> {
     );
   }
 
-  Future<void> _saveBoardStroke(List<Offset> points) async {
+  Color get _activeStrokeColor {
+    if (_boardTool == 'Eraser') return Theme.of(context).colorScheme.surface;
+    if (_boardTool == 'Highlighter') return const Color(0x66FFEB3B);
+    return Theme.of(context).colorScheme.onSurface;
+  }
+
+  double get _activeStrokeWidth {
+    if (_boardTool == 'Eraser') return 20;
+    if (_boardTool == 'Highlighter') return 12;
+    return 3;
+  }
+
+  _BoardStroke _decodeStroke(Map<String, dynamic> stroke) {
+    final rawPoints = stroke['points'] as List<dynamic>? ?? [];
+    final points = rawPoints.map((rawPoint) {
+      final pair = rawPoint as List<dynamic>;
+      return Offset(
+        (pair[0] as num).toDouble(),
+        (pair[1] as num).toDouble(),
+      );
+    }).toList();
+    return _BoardStroke(
+      points: points,
+      color: Color((stroke['color'] as num?)?.toInt() ??
+          Theme.of(context).colorScheme.onSurface.value),
+      width: (stroke['width'] as num?)?.toDouble() ?? 3,
+    );
+  }
+
+  Future<void> _saveBoardStroke(
+    List<Offset> points, {
+    required Color color,
+    required double width,
+  }) async {
     try {
-      await _repository.addBoardStroke(widget.roomId, points);
+      await _repository.addBoardStroke(
+        widget.roomId,
+        points,
+        color: color.value,
+        width: width,
+      );
     } on FirebaseException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -424,24 +475,34 @@ class _MeetingScreenState extends State<MeetingScreen> {
   }
 }
 
-class _BoardPainter extends CustomPainter {
-  const _BoardPainter({required this.strokes, required this.color});
+class _BoardStroke {
+  const _BoardStroke({
+    required this.points,
+    required this.color,
+    required this.width,
+  });
 
-  final List<List<Offset>> strokes;
+  final List<Offset> points;
   final Color color;
+  final double width;
+}
+
+class _BoardPainter extends CustomPainter {
+  const _BoardPainter({required this.strokes});
+
+  final List<_BoardStroke> strokes;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.stroke;
-
     for (final stroke in strokes) {
-      if (stroke.isEmpty) continue;
-      final points = stroke
+      if (stroke.points.isEmpty) continue;
+      final paint = Paint()
+        ..color = stroke.color
+        ..strokeWidth = stroke.width
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..style = PaintingStyle.stroke;
+      final points = stroke.points
           .map((point) => Offset(point.dx * size.width, point.dy * size.height))
           .toList();
       if (points.length == 1) {
