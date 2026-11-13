@@ -330,7 +330,7 @@ class _BoardPainter extends CustomPainter {
           .map((point) => Offset(point.dx * size.width, point.dy * size.height))
           .toList();
       if (points.length == 1) {
-        canvas.drawPoints(PointMode.points, points, paint);
+        canvas.drawCircle(points.first, paint.strokeWidth / 2, paint);
         continue;
       }
       final path = Path()..moveTo(points.first.dx, points.first.dy);
