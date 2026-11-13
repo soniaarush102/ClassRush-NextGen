@@ -80,6 +80,23 @@ service cloud.firestore {
 
       allow delete: if signedIn() && resource.data.hostUid == request.auth.uid;
 
+      match /boardStrokes/{strokeId} {
+        // Only signed-in members of this room can view or change its board.
+        allow read: if signedIn()
+          && exists(memberPath(roomId, request.auth.uid));
+        allow create: if signedIn()
+          && exists(memberPath(roomId, request.auth.uid))
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.points is list
+          && request.resource.data.points.size() <= 2000
+          && request.resource.data.keys().hasOnly([
+            'uid', 'points', 'createdAt'
+          ]);
+        allow delete: if signedIn()
+          && exists(memberPath(roomId, request.auth.uid));
+        allow update: if false;
+      }
+
       match /members/{memberUid} {
         allow read: if signedIn() &&
           (exists(memberPath(roomId, request.auth.uid))
