@@ -120,8 +120,10 @@ class DiscussionRoomRepository {
 
   Future<void> addBoardStroke(
     String roomId,
-    List<Offset> points,
-  ) async {
+    List<Offset> points, {
+    required int color,
+    required double width,
+  }) async {
     final uid = _uid;
     final strokeRef = _rooms.doc(roomId).collection('boardStrokes').doc();
 
@@ -141,6 +143,8 @@ class DiscussionRoomRepository {
     await strokeRef.set({
       'uid': uid,
       'points': storedPoints.map((point) => [point.dx, point.dy]).toList(),
+      'color': color,
+      'width': width,
       'createdAt': Timestamp.now(),
     });
   }
