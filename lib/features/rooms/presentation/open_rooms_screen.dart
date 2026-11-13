@@ -13,7 +13,7 @@ class OpenRoomsScreen extends StatefulWidget {
 class _OpenRoomsScreenState extends State<OpenRoomsScreen> {
   final _searchController = TextEditingController();
   final _repository = DiscussionRoomRepository();
-  late final Stream<List<DiscussionRoom>> _roomsStream;
+  late Stream<List<DiscussionRoom>> _roomsStream;
   bool _isCreating = false;
   bool _isJoining = false;
 
@@ -114,7 +114,7 @@ class _OpenRoomsScreenState extends State<OpenRoomsScreen> {
                   message: 'Check your connection and Firebase access, then try again.',
                   actionLabel: 'Retry',
                   onAction: () => setState(() {
-                    // Rebuild the stream after a transient connection error.
+                    _roomsStream = _repository.watchOpenRooms();
                   }),
                 )
               else if (visibleRooms.isEmpty)
