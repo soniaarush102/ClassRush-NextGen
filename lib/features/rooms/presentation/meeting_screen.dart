@@ -29,6 +29,8 @@ class _MeetingScreenState extends State<MeetingScreen> {
   Color _penColor = Colors.black;
   double _penWidth = 3;
   _MeetingMode _mode = _MeetingMode.whiteboard;
+  int _slideCount = 1;
+  int _currentSlide = 0;
   bool _isLeaving = false;
 
   Future<void> _leaveMeeting() async {
@@ -442,35 +444,95 @@ class _MeetingScreenState extends State<MeetingScreen> {
   }
 
   Widget _presentation() {
+    final colors = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        color: colors.surface,
+        border: Border.all(color: colors.outlineVariant),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.slideshow_outlined,
-                size: 48,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 12),
-              Text('Presentation workspace',
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 8),
-              const Text(
-                'PPT and PDF upload, slide navigation and shared presentation controls will be added in the next stage.',
-                textAlign: TextAlign.center,
-              ),
-            ],
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: Row(
+              children: [
+                FilledButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _slideCount += 1;
+                      _currentSlide = _slideCount - 1;
+                    });
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('New slide'),
+                ),
+                const Spacer(),
+                IconButton(
+                  tooltip: 'Previous slide',
+                  onPressed: _currentSlide > 0
+                      ? () => setState(() => _currentSlide -= 1)
+                      : null,
+                  icon: const Icon(Icons.chevron_left),
+                ),
+                Text(
+                  'Slide ${_currentSlide + 1} of $_slideCount',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                IconButton(
+                  tooltip: 'Next slide',
+                  onPressed: _currentSlide < _slideCount - 1
+                      ? () => setState(() => _currentSlide += 1)
+                      : null,
+                  icon: const Icon(Icons.chevron_right),
+                ),
+              ],
+            ),
           ),
-        ),
+          const Divider(height: 1),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: colors.surfaceContainerLowest,
+                    border: Border.all(color: colors.outlineVariant),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.note_add_outlined,
+                            size: 42, color: colors.primary),
+                        const SizedBox(height: 8),
+                        Text('Slide ${_currentSlide + 1}',
+                            style: Theme.of(context).textTheme.headlineSmall),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Blank slide',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              'Blank slide controls are available. Shared slide saving, editing and PPT/PDF import are still being built.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
       ),
     );
   }
