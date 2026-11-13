@@ -136,7 +136,7 @@ jobs:
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
           disable-animations: true
           script: |
-            set -euo pipefail
+            set -eu
             adb install -r build/app/outputs/flutter-apk/app-debug.apk
             adb shell am force-stop com.classrush.app
             adb shell monkey -p com.classrush.app 1
