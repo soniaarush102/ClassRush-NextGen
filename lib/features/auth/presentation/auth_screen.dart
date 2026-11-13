@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -55,6 +56,36 @@ class _AuthScreenState extends State<AuthScreen> {
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
+      }
+
+      // Room creation and joining use this profile document for a safe,
+      // display-name-only participant identity.
+      final user = auth.currentUser;
+      if (user != null) {
+        final profileRef =
+            FirebaseFirestore.instance.collection('profiles').doc(user.uid);
+        final profileSnapshot = await profileRef.get();
+        final existingName =
+            profileSnapshot.data()?['displayName'] as String?;
+        final enteredName = _isCreatingAccount
+            ? _nameController.text.trim()
+            : (user.displayName ?? '');
+        final emailName = user.email?.split('@').first ?? '';
+        final displayName = (existingName?.trim().isNotEmpty ?? false)
+            ? existingName!.trim()
+            : (enteredName.length >= 2
+                ? enteredName
+                : (emailName.length >= 2 ? emailName : 'Member'));
+        await profileRef.set({
+          'displayName': displayName.length > 24
+              ? displayName.substring(0, 24)
+              : displayName,
+          'createdAt': profileSnapshot.exists
+              ? profileSnapshot.data()?['createdAt'] ??
+                  FieldValue.serverTimestamp()
+              : FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
       }
 
       if (!mounted) return;
