@@ -127,28 +127,36 @@ jobs:
           path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
 
-      - name: Launch CLASSRUSH and capture real emulator screenshot
+      - name: Launch CLASSRUSH and capture emulator diagnostics
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 34
           arch: x86_64
           profile: pixel_2
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
           disable-animations: true
           script: |
             set -eu
+            mkdir -p screenshots
+            adb wait-for-device
             adb install -r build/app/outputs/flutter-apk/app-debug.apk
             adb shell am force-stop com.classrush.app
-            adb shell monkey -p com.classrush.app 1
+            adb logcat -c
+            adb shell am start -W -n com.classrush.app/.MainActivity || true
+            sleep 20
+            adb exec-out screencap -p > screenshots/classrush-after-20s.png
             sleep 25
-            adb shell pidof com.classrush.app
-            mkdir -p screenshots
-            adb exec-out screencap -p > screenshots/classrush-running.png
+            adb exec-out screencap -p > screenshots/classrush-after-45s.png
+            adb shell pidof com.classrush.app > screenshots/app-process.txt || true
+            adb shell dumpsys activity activities > screenshots/activities.txt
+            adb shell dumpsys window > screenshots/windows.txt
+            adb logcat -d -t 12000 > screenshots/logcat.txt
+            cp screenshots/classrush-after-45s.png screenshots/classrush-running.png
             test -s screenshots/classrush-running.png
 
-      - name: Upload actual app screenshot
+      - name: Upload emulator screenshots and diagnostics
         uses: actions/upload-artifact@v4
         with:
-          name: classrush-actual-screenshot
-          path: screenshots/classrush-running.png
+          name: classrush-emulator-diagnostics
+          path: screenshots/
           if-no-files-found: error
