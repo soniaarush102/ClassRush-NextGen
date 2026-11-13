@@ -48,8 +48,11 @@ service cloud.firestore {
         && request.resource.data.status == 'open'
         && request.resource.data.keys().hasOnly([
           'title', 'topic', 'description', 'hostUid', 'hostName',
-          'participantCount', 'status', 'createdAt', 'updatedAt'
-        ]);
+          'participantCount', 'status', 'createdAt', 'updatedAt',
+          'presentationSlideCount', 'presentationCurrentSlide'
+        ])
+        && request.resource.data.presentationSlideCount == 1
+        && request.resource.data.presentationCurrentSlide == 0;
 
       allow update: if signedIn() && (
         (
@@ -75,6 +78,17 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['status', 'updatedAt'])
           && request.resource.data.status == 'closed'
+        ) || (
+          exists(memberPath(roomId, request.auth.uid))
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['presentationSlideCount', 'presentationCurrentSlide', 'updatedAt'])
+          && request.resource.data.presentationSlideCount is int
+          && request.resource.data.presentationSlideCount >= 1
+          && request.resource.data.presentationSlideCount <= 500
+          && request.resource.data.presentationCurrentSlide is int
+          && request.resource.data.presentationCurrentSlide >= 0
+          && request.resource.data.presentationCurrentSlide
+            < request.resource.data.presentationSlideCount
         )
       );
 
