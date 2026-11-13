@@ -26,6 +26,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
   List<Offset> _activeStroke = [];
   Offset? _strokeStart;
   String _boardTool = 'Pen';
+  Color _penColor = Colors.black;
   _MeetingMode _mode = _MeetingMode.whiteboard;
   bool _isLeaving = false;
 
@@ -188,6 +189,42 @@ class _MeetingScreenState extends State<MeetingScreen> {
                         },
                   icon: const Icon(Icons.delete_outline_rounded),
                 ),
+                if (_boardTool == 'Pen')
+                  PopupMenuButton<Color>(
+                    tooltip: 'Pen colour',
+                    initialValue: _penColor,
+                    onSelected: (color) => setState(() => _penColor = color),
+                    itemBuilder: (context) => [
+                      Colors.black,
+                      Colors.red,
+                      Colors.blue,
+                      Colors.green,
+                      Colors.purple,
+                      Colors.orange,
+                      Colors.teal,
+                      Colors.white,
+                    ].map((color) => PopupMenuItem<Color>(
+                      value: color,
+                      child: Row(
+                        children: [
+                          CircleAvatar(radius: 9, backgroundColor: color),
+                          const SizedBox(width: 10),
+                          Text(_penColorName(color)),
+                          if (_penColor.toARGB32() == color.toARGB32()) ...[
+                            const Spacer(),
+                            const Icon(Icons.check, size: 16),
+                          ],
+                        ],
+                      ),
+                    )).toList(),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.palette_outlined, color: _penColor),
+                        const Icon(Icons.arrow_drop_down),
+                      ],
+                    ),
+                  ),
                 const Spacer(),
                 const Text('Shared Whiteboard'),
               ],
@@ -282,10 +319,21 @@ class _MeetingScreenState extends State<MeetingScreen> {
     return [start, end];
   }
 
+  String _penColorName(Color color) {
+    if (color == Colors.black) return 'Black';
+    if (color == Colors.red) return 'Red';
+    if (color == Colors.blue) return 'Blue';
+    if (color == Colors.green) return 'Green';
+    if (color == Colors.purple) return 'Purple';
+    if (color == Colors.orange) return 'Orange';
+    if (color == Colors.teal) return 'Teal';
+    return 'White';
+  }
+
   Color get _activeStrokeColor {
     if (_boardTool == 'Eraser') return Theme.of(context).colorScheme.surface;
     if (_boardTool == 'Highlighter') return const Color(0x66FFEB3B);
-    return Theme.of(context).colorScheme.onSurface;
+    return _penColor;
   }
 
   double get _activeStrokeWidth {
