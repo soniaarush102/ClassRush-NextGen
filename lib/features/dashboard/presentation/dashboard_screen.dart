@@ -143,7 +143,7 @@ class _DashboardContent extends StatelessWidget {
               ),
               const SizedBox(height: 36),
               Text(
-                'Your maths community,\nwithout boundaries.',
+                'Your community,\nwithout boundaries.',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                       height: 1.12,
@@ -163,7 +163,7 @@ class _DashboardContent extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               Text(
-                'Your maths space',
+                'Your meeting space',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -252,11 +252,11 @@ class _WorkspaceCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Collaborative maths room',
+                    'Collaborative meeting room',
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                   ),
                   SizedBox(height: 5),
-                  Text('A shared space for live problem-solving and discussion.'),
+                  Text('A shared space for live discussions and collaboration.'),
                 ],
               ),
             ),
@@ -277,7 +277,7 @@ class _FeatureGrid extends StatelessWidget {
       (Icons.draw_outlined, 'Live whiteboard', 'Write and solve together'),
       (Icons.video_call_outlined, 'Live classroom', 'Discuss face to face'),
       (Icons.picture_as_pdf_outlined, 'PDF & slides', 'Present and annotate'),
-      (Icons.forum_outlined, 'Class chat', 'Keep every discussion close'),
+      (Icons.forum_outlined, 'Meeting chat', 'Keep the conversation together'),
     ];
 
     return LayoutBuilder(
