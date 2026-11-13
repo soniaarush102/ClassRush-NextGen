@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../data/discussion_room.dart';
@@ -275,12 +276,24 @@ class _OpenRoomsScreenState extends State<OpenRoomsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error.message)),
       );
-    } catch (_) {
+    } on FirebaseException catch (error) {
+      if (!mounted) return;
+      final message = switch (error.code) {
+        'permission-denied' =>
+          'Firebase permission denied. Firestore security rules need to be checked.',
+        'unavailable' =>
+          'Firebase is unavailable. Check your internet connection and try again.',
+        'failed-precondition' =>
+          'Firestore setup is incomplete. Please check the database configuration.',
+        _ => 'Room creation failed (' + error.code + '). Please try again.',
+      };
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not create the room. Check your connection and try again.'),
-        ),
+        SnackBar(content: Text('Could not create the room (' + error.runtimeType.toString() + '). Please try again.')),
       );
     } finally {
       if (mounted) setState(() => _isCreating = false);
