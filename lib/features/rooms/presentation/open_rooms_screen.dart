@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/discussion_room.dart';
 import '../data/discussion_room_repository.dart';
+import 'meeting_screen.dart';
 
 class OpenRoomsScreen extends StatefulWidget {
   const OpenRoomsScreen({super.key});
@@ -159,12 +160,12 @@ class _OpenRoomsScreenState extends State<OpenRoomsScreen> {
     try {
       await _repository.joinRoom(room.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'You have joined this room. The live whiteboard and video meeting workspace are not connected in this build yet.',
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => MeetingScreen(
+            roomId: room.id,
+            roomTitle: room.title,
           ),
-          duration: Duration(seconds: 5),
         ),
       );
     } on DiscussionRoomException catch (error) {
@@ -251,15 +252,18 @@ class _OpenRoomsScreenState extends State<OpenRoomsScreen> {
 
     setState(() => _isCreating = true);
     try {
-      await _repository.createRoom(
+      final roomId = await _repository.createRoom(
         title: details.title,
         topic: 'General',
         description: details.description,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Your room is open and ready for others to join.'),
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => MeetingScreen(
+            roomId: roomId,
+            roomTitle: details.title,
+          ),
         ),
       );
     } on DiscussionRoomException catch (error) {
