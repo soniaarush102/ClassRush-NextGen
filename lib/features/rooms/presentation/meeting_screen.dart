@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../data/discussion_room_repository.dart';
@@ -24,15 +23,6 @@ class _MeetingScreenState extends State<MeetingScreen> {
   final List<List<Offset>> _strokes = [];
   _MeetingMode _mode = _MeetingMode.whiteboard;
   bool _isLeaving = false;
-
-  String get _myName {
-    final user = FirebaseAuth.instance.currentUser;
-    final name = user?.displayName?.trim();
-    if (name != null && name.isNotEmpty) return name;
-    final email = user?.email;
-    if (email != null && email.contains('@')) return email.split('@').first;
-    return 'You';
-  }
 
   Future<void> _leaveMeeting() async {
     if (_isLeaving) return;
