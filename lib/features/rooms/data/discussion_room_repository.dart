@@ -53,21 +53,18 @@ class DiscussionRoomRepository {
     }, SetOptions(merge: true));
   }
 
-  Stream<List<DiscussionRoom>> watchOpenRooms({String? topic}) {
-    Query<Map<String, dynamic>> query = _rooms
+  Stream<List<DiscussionRoom>> watchOpenRooms() {
+    // Only show rooms created through the current general-purpose flow.
+    // Older seeded demo rooms used subject-specific topic values and must not
+    // appear as real user meetings (for example, Number Theory sample rooms).
+    return _rooms
         .where('status', isEqualTo: 'open')
-        .orderBy('createdAt', descending: true);
-
-    if (topic != null && topic != 'All topics') {
-      query = query.where('topic', isEqualTo: topic);
-    }
-
-    return query.snapshots().map(
-          (snapshot) => snapshot.docs
-              .map(DiscussionRoom.fromFirestore)
-              .where((room) => room.isJoinable)
-              .toList(),
-        );
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map(DiscussionRoom.fromFirestore)
+            .where((room) => room.isJoinable && room.topic == 'General')
+            .toList());
   }
 
   Future<String> createRoom({
