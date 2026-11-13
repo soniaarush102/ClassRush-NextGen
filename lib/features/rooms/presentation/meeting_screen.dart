@@ -247,7 +247,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Whiteboard sync failed (${error.runtimeType}).'),
+          content: Text('Whiteboard sync failed: ${error.toString().length > 180 ? error.toString().substring(0, 180) : error.toString()}'),
           duration: const Duration(seconds: 8),
         ),
       );
