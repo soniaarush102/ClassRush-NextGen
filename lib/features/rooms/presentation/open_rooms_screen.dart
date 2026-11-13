@@ -246,6 +246,10 @@ class _OpenRoomsScreenState extends State<OpenRoomsScreen> {
       ),
     );
 
+    // showDialog completes as the pop transition begins. Let the dialog route
+    // finish closing before disposing its controllers or opening the meeting
+    // route, so its inherited widget dependents are fully detached.
+    await Future<void>.delayed(const Duration(milliseconds: 300));
     titleController.dispose();
     descriptionController.dispose();
     if (details == null || !mounted) return;
