@@ -21,18 +21,32 @@ class ClassRushApp extends StatelessWidget {
   }
 }
 
-/// Firebase Auth restores the saved session when the app starts.
-/// A signed-in user goes straight to the dashboard; the auth screen is
-/// shown only when there is no signed-in user.
-class _AuthenticationGate extends StatelessWidget {
+/// Keep one auth-state subscription for the lifetime of the app.
+/// Firebase restores the saved Android session; signed-in users bypass login.
+class _AuthenticationGate extends StatefulWidget {
   const _AuthenticationGate();
+
+  @override
+  State<_AuthenticationGate> createState() => _AuthenticationGateState();
+}
+
+class _AuthenticationGateState extends State<_AuthenticationGate> {
+  late final Stream<User?> _authChanges;
+
+  @override
+  void initState() {
+    super.initState();
+    _authChanges = FirebaseAuth.instance.authStateChanges();
+  }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
+      stream: _authChanges,
+      initialData: FirebaseAuth.instance.currentUser,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            snapshot.data == null) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
