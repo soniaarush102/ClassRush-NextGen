@@ -194,7 +194,7 @@ class _AuthScreenState extends State<AuthScreen> {
         children: [
           const _Brand(),
           const Spacer(),
-          const Icon(Icons.functions_rounded, color: Colors.white, size: 64),
+          const Icon(Icons.groups_rounded, color: Colors.white, size: 64),
           const SizedBox(height: 28),
           Text(
             'Think together.\nSolve anything.',
@@ -206,7 +206,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
           const SizedBox(height: 18),
           Text(
-            'A place for students to discuss mathematics, share ideas and solve problems together.',
+            'A place for students to meet, share ideas and work together.',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Colors.white.withValues(alpha: 0.92),
                   height: 1.5,
@@ -215,7 +215,7 @@ class _AuthScreenState extends State<AuthScreen> {
           const Spacer(),
           const _BenefitRow(
             icon: Icons.groups_outlined,
-            text: 'Discuss maths with peers',
+            text: 'Discuss ideas with peers',
           ),
           const SizedBox(height: 16),
           const _BenefitRow(
@@ -253,8 +253,8 @@ class _AuthScreenState extends State<AuthScreen> {
               const SizedBox(height: 8),
               Text(
                 _isCreatingAccount
-                    ? 'Create one account and start discussing mathematics.'
-                    : 'Sign in and continue your maths discussions.',
+                    ? 'Create one account and start meeting with peers.'
+                    : 'Sign in and continue your discussions.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
