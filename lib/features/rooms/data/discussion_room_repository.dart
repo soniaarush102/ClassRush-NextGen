@@ -210,7 +210,10 @@ class DiscussionRoomRepository {
 
     await strokeRef.set({
       'uid': uid,
-      'points': storedPoints.map((point) => [point.dx, point.dy]).toList(),
+      // Store each coordinate as a map. Firestore rejects nested arrays.
+      'points': storedPoints
+          .map((point) => <String, double>{'x': point.dx, 'y': point.dy})
+          .toList(),
       'color': color,
       'width': width,
       'createdAt': Timestamp.now(),
