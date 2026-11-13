@@ -75,14 +75,12 @@ class _AuthScreenState extends State<AuthScreen> {
             : (enteredName.length >= 2
                 ? enteredName
                 : (emailName.length >= 2 ? emailName : 'Member'));
+        final existingCreatedAt = profileSnapshot.data()?['createdAt'];
         await profileRef.set({
           'displayName': displayName.length > 24
               ? displayName.substring(0, 24)
               : displayName,
-          'createdAt': profileSnapshot.exists
-              ? profileSnapshot.data()?['createdAt'] ??
-                  FieldValue.serverTimestamp()
-              : FieldValue.serverTimestamp(),
+          'createdAt': existingCreatedAt ?? FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       }
