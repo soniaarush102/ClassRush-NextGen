@@ -89,8 +89,12 @@ service cloud.firestore {
           && request.resource.data.uid == request.auth.uid
           && request.resource.data.points is list
           && request.resource.data.points.size() <= 2000
+          && request.resource.data.color is int
+          && request.resource.data.width is number
+          && request.resource.data.width > 0
+          && request.resource.data.width <= 30
           && request.resource.data.keys().hasOnly([
-            'uid', 'points', 'createdAt'
+            'uid', 'points', 'color', 'width', 'createdAt'
           ]);
         allow delete: if signedIn()
           && exists(memberPath(roomId, request.auth.uid));
