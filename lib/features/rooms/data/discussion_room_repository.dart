@@ -29,6 +29,30 @@ class DiscussionRoomRepository {
     return user.uid;
   }
 
+  Future<void> _ensureProfile(User user) async {
+    final profileRef = _profile(user.uid);
+    final snapshot = await profileRef.get();
+    final existingName = snapshot.data()?['displayName'] as String?;
+    if (snapshot.exists && (existingName?.trim().isNotEmpty ?? false)) {
+      return;
+    }
+
+    final authName = user.displayName?.trim() ?? '';
+    final emailName = user.email?.split('@').first.trim() ?? '';
+    final chosenName = authName.length >= 2
+        ? authName
+        : (emailName.length >= 2 ? emailName : 'Member');
+    final displayName = chosenName.length > 24
+        ? chosenName.substring(0, 24)
+        : chosenName;
+
+    await profileRef.set({
+      'displayName': displayName,
+      'createdAt': snapshot.data()?['createdAt'] ?? FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
   Stream<List<DiscussionRoom>> watchOpenRooms({String? topic}) {
     Query<Map<String, dynamic>> query = _rooms
         .where('status', isEqualTo: 'open')
@@ -51,10 +75,15 @@ class DiscussionRoomRepository {
     required String topic,
     required String description,
   }) async {
+    final user = _auth.currentUser;
     final uid = _uid;
     if (title.trim().isEmpty) {
       throw const DiscussionRoomException('Enter a room name.');
     }
+
+    // Older accounts may not have a Firestore profile document yet.
+    // Create/repair that owner-only profile before the room transaction.
+    await _ensureProfile(user!);
 
     final roomRef = _rooms.doc();
     final memberRef = roomRef.collection('members').doc(uid);
@@ -64,11 +93,11 @@ class DiscussionRoomRepository {
       final profile = profileSnapshot.data();
       if (profile == null) {
         throw const DiscussionRoomException(
-          'Complete your student profile before creating a room.',
+          'Your profile could not be found. Please sign out and sign in again.',
         );
       }
 
-      final displayName = profile['displayName'] as String? ?? 'Student';
+      final displayName = profile['displayName'] as String? ?? 'Member';
       final now = FieldValue.serverTimestamp();
       transaction.set(roomRef, {
         'title': title.trim(),
@@ -110,7 +139,7 @@ class DiscussionRoomRepository {
       final profile = profileSnapshot.data();
       if (profile == null) {
         throw const DiscussionRoomException(
-          'Complete your student profile before joining a room.',
+          'Complete your profile before joining a room.',
         );
       }
 
@@ -120,12 +149,11 @@ class DiscussionRoomRepository {
 
       transaction.set(memberRef, {
         'uid': uid,
-        'displayName': profile['displayName'] as String? ?? 'Student',
+        'displayName': profile['displayName'] as String? ?? 'Member',
         'joinedAt': FieldValue.serverTimestamp(),
       });
       transaction.update(roomRef, {
-        'participantCount':
-            (room['participantCount'] as int? ?? 0) + 1,
+        'participantCount': (room['participantCount'] as int? ?? 0) + 1,
         'updatedAt': FieldValue.serverTimestamp(),
       });
     });
