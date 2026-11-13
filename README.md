@@ -1,22 +1,22 @@
 # CLASSRUSH
 
-**A peer-to-peer mathematics discussion and collaboration platform for students.**
+**A peer-to-peer meeting and collaboration platform for students.**
 
 CLASSRUSH is being developed as a Flutter application, starting with Android and keeping the architecture ready for iOS and Windows.
 
 ## Product direction
 
 - One common student account type; no teacher/student role split
-- An open-room discovery model: students browse available maths discussion rooms and choose which ones to join
+- An open-room discovery model: users browse available meeting rooms and choose which ones to join
 - Students can create a room, share its invite link/code, or join an open room without teacher approval
-- Room listings can show topic, problem being discussed, participant count, and whether the room is open
+- Room listings show real room names, descriptions, creator names, and live participant counts
 - Open rooms are discoverable by signed-in users without age-band matching or a fixed participant limit
 - Live audio/video, participant controls, chat, and optional screen sharing
 - Collaborative whiteboard with named live cursors and simultaneous writing
 - Pen, highlighter, eraser, shapes, undo/redo, save, and export
 - PDF viewing and annotation with synchronized pages
 - Presentation and problem-sheet sharing
-- Mathematics-focused writing and diagram tools
+- General-purpose writing, drawing, and diagram tools
 - Privacy-conscious profiles, room permissions, and community safety controls
 
 ## Core discussion-room layout
@@ -37,7 +37,7 @@ The goal is equal peer collaboration: everyone in a room can contribute to the d
 - Initial navigation for Home, Discussion Rooms, Resources, and Settings (labels and destinations will evolve)
 - Student-focused sign-in and account-creation UI with no teacher/student role selector
 
-The current authentication screen is UI only. Authentication, video, whiteboard synchronization, and cloud persistence are not yet connected to the app screens.
+Firebase Authentication, participant profile creation, Firestore room discovery, room creation, and room membership are connected. Live audio/video, synchronized whiteboard operations, and presentation rendering/upload are still implementation milestones; the app must not present sample participants or fake room activity.
 
 ## Technology direction
 
