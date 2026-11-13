@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -21,7 +22,7 @@ class MeetingScreen extends StatefulWidget {
 
 class _MeetingScreenState extends State<MeetingScreen> {
   final _repository = DiscussionRoomRepository();
-  final List<List<Offset>> _strokes = [];
+  List<Offset> _activeStroke = [];
   _MeetingMode _mode = _MeetingMode.whiteboard;
   bool _isLeaving = false;
 
@@ -114,68 +115,126 @@ class _MeetingScreenState extends State<MeetingScreen> {
   }
 
   Widget _whiteboard() {
-    return Column(
-      children: [
-        Row(
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _repository.watchBoardStrokes(widget.roomId),
+      builder: (context, snapshot) {
+        final savedStrokes = (snapshot.data ?? const <Map<String, dynamic>>[])
+            .map((stroke) {
+          final rawPoints = stroke['points'] as List<dynamic>? ?? [];
+          return rawPoints.map((rawPoint) {
+            final pair = rawPoint as List<dynamic>;
+            return Offset(
+              (pair[0] as num).toDouble(),
+              (pair[1] as num).toDouble(),
+            );
+          }).toList();
+        }).toList();
+        final allStrokes = [
+          ...savedStrokes,
+          if (_activeStroke.isNotEmpty) _activeStroke,
+        ];
+
+        return Column(
           children: [
-            IconButton(
-              tooltip: 'Undo last stroke',
-              onPressed: _strokes.isEmpty
-                  ? null
-                  : () => setState(() => _strokes.removeLast()),
-              icon: const Icon(Icons.undo_rounded),
-            ),
-            IconButton(
-              tooltip: 'Clear board',
-              onPressed: _strokes.isEmpty
-                  ? null
-                  : () => setState(_strokes.clear),
-              icon: const Icon(Icons.delete_outline_rounded),
-            ),
-            const Spacer(),
-            const Text('Whiteboard'),
-          ],
-        ),
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final size = Size(constraints.maxWidth, constraints.maxHeight);
-              return GestureDetector(
-                onPanStart: (details) {
-                  final point = _normalise(details.localPosition, size);
-                  setState(() => _strokes.add([point]));
-                },
-                onPanUpdate: (details) {
-                  if (_strokes.isEmpty) return;
-                  final point = _normalise(details.localPosition, size);
-                  setState(() => _strokes.last.add(point));
-                },
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: CustomPaint(
-                    painter: _BoardPainter(
-                      strokes: _strokes,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    child: const SizedBox.expand(),
-                  ),
+            Row(
+              children: [
+                IconButton(
+                  tooltip: 'Undo last stroke',
+                  onPressed: savedStrokes.isEmpty
+                      ? null
+                      : () async {
+                          final strokes = snapshot.data!;
+                          final lastId = strokes.last['id'] as String?;
+                          if (lastId == null) return;
+                          try {
+                            await _repository.deleteBoardStroke(widget.roomId, lastId);
+                          } catch (_) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Could not undo the last stroke.')),
+                            );
+                          }
+                        },
+                  icon: const Icon(Icons.undo_rounded),
                 ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Your drawing is currently on this device only. Shared live drawing is a later integration step.',
-          style: Theme.of(context).textTheme.bodySmall,
-          textAlign: TextAlign.center,
-        ),
-      ],
+                IconButton(
+                  tooltip: 'Clear board',
+                  onPressed: savedStrokes.isEmpty
+                      ? null
+                      : () async {
+                          try {
+                            await _repository.clearBoard(widget.roomId);
+                          } catch (_) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Could not clear the board.')),
+                            );
+                          }
+                        },
+                  icon: const Icon(Icons.delete_outline_rounded),
+                ),
+                const Spacer(),
+                const Text('Shared Whiteboard'),
+              ],
+            ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final size = Size(constraints.maxWidth, constraints.maxHeight);
+                  return GestureDetector(
+                    onPanStart: (details) {
+                      setState(() {
+                        _activeStroke = [_normalise(details.localPosition, size)];
+                      });
+                    },
+                    onPanUpdate: (details) {
+                      setState(() {
+                        _activeStroke.add(_normalise(details.localPosition, size));
+                      });
+                    },
+                    onPanEnd: (_) {
+                      final completedStroke = List<Offset>.from(_activeStroke);
+                      setState(() => _activeStroke = []);
+                      if (completedStroke.isNotEmpty) {
+                        _repository.addBoardStroke(widget.roomId, completedStroke)
+                            .catchError((_) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Could not sync your drawing. Check your connection and try again.')),
+                          );
+                        });
+                      }
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: CustomPaint(
+                        painter: _BoardPainter(
+                          strokes: allStrokes,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        child: const SizedBox.expand(),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              snapshot.hasError
+                  ? 'Could not load the shared whiteboard.'
+                  : 'Drawings sync with room members after each stroke is finished.',
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        );
+      },
     );
   }
 
