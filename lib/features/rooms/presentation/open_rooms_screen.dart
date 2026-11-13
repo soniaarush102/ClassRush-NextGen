@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_theme.dart';
+import '../data/discussion_room.dart';
+import '../data/discussion_room_repository.dart';
 
 class OpenRoomsScreen extends StatefulWidget {
   const OpenRoomsScreen({super.key});
@@ -11,62 +12,15 @@ class OpenRoomsScreen extends StatefulWidget {
 
 class _OpenRoomsScreenState extends State<OpenRoomsScreen> {
   final _searchController = TextEditingController();
-  String _selectedTopic = 'All topics';
+  final _repository = DiscussionRoomRepository();
+  late final Stream<List<DiscussionRoom>> _roomsStream;
+  bool _isCreating = false;
+  bool _isJoining = false;
 
-  final List<_DiscussionRoom> _rooms = [
-    _DiscussionRoom(
-      title: 'Number Theory: Modular Arithmetic',
-      topic: 'Number Theory',
-      description: 'Explore congruences, remainders and clever olympiad tricks.',
-      participants: 4,
-      level: 'Olympiad',
-      host: 'Maths Explorer',
-    ),
-    _DiscussionRoom(
-      title: 'Geometry Problem-Solving Corner',
-      topic: 'Geometry',
-      description: 'Bring a geometry problem and work through it together.',
-      participants: 3,
-      level: 'All levels',
-      host: 'Euclid Club',
-    ),
-    _DiscussionRoom(
-      title: 'Combinatorics: Counting Challenges',
-      topic: 'Combinatorics',
-      description: 'Discuss counting strategies, invariants and constructions.',
-      participants: 5,
-      level: 'Olympiad',
-      host: 'Counting Crew',
-    ),
-    _DiscussionRoom(
-      title: 'Algebra Practice and Ideas',
-      topic: 'Algebra',
-      description: 'Share approaches to equations, inequalities and polynomials.',
-      participants: 2,
-      level: 'All levels',
-      host: 'Algebra Circle',
-    ),
-  ];
-
-  static const _topics = [
-    'All topics',
-    'Number Theory',
-    'Geometry',
-    'Combinatorics',
-    'Algebra',
-  ];
-
-  List<_DiscussionRoom> get _visibleRooms {
-    final query = _searchController.text.trim().toLowerCase();
-    return _rooms.where((room) {
-      final matchesTopic =
-          _selectedTopic == 'All topics' || room.topic == _selectedTopic;
-      final matchesSearch = query.isEmpty ||
-          room.title.toLowerCase().contains(query) ||
-          room.description.toLowerCase().contains(query) ||
-          room.topic.toLowerCase().contains(query);
-      return matchesTopic && matchesSearch;
-    }).toList();
+  @override
+  void initState() {
+    super.initState();
+    _roomsStream = _repository.watchOpenRooms();
   }
 
   @override
@@ -80,215 +34,275 @@ class _OpenRoomsScreenState extends State<OpenRoomsScreen> {
     final compact = MediaQuery.sizeOf(context).width < 650;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Open discussion rooms'),
+        title: const Text('Open meeting rooms'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: FilledButton.icon(
-              onPressed: _showCreateRoomDialog,
+              onPressed: _isCreating ? null : _showCreateRoomDialog,
               icon: const Icon(Icons.add_rounded),
               label: const Text('Create room'),
             ),
           ),
         ],
       ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(compact ? 16 : 32, 20, compact ? 16 : 32, 32),
-        children: [
-          Text(
-            'Find your maths discussion',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Choose an open room, meet other maths enthusiasts and solve problems together.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-          ),
-          const SizedBox(height: 22),
-          TextField(
-            controller: _searchController,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              hintText: 'Search topics or room names',
-              prefixIcon: const Icon(Icons.search_rounded),
-              suffixIcon: _searchController.text.isEmpty
-                  ? null
-                  : IconButton(
-                      tooltip: 'Clear search',
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {});
-                      },
-                      icon: const Icon(Icons.close_rounded),
-                    ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+      body: StreamBuilder<List<DiscussionRoom>>(
+        stream: _roomsStream,
+        builder: (context, snapshot) {
+          final rooms = snapshot.data ?? const <DiscussionRoom>[];
+          final query = _searchController.text.trim().toLowerCase();
+          final visibleRooms = rooms.where((room) {
+            return query.isEmpty ||
+                room.title.toLowerCase().contains(query) ||
+                room.description.toLowerCase().contains(query) ||
+                room.hostName.toLowerCase().contains(query);
+          }).toList();
+
+          return ListView(
+            padding: EdgeInsets.fromLTRB(
+              compact ? 16 : 32, 20, compact ? 16 : 32, 32,
             ),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _topics.map((topic) {
-              return ChoiceChip(
-                label: Text(topic),
-                selected: _selectedTopic == topic,
-                onSelected: (_) => setState(() => _selectedTopic = topic),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 24),
-          Row(
             children: [
               Text(
-                '${_visibleRooms.length} open rooms',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                'Find a meeting',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
                     ),
               ),
-              const Spacer(),
-              const Icon(Icons.circle, color: Colors.green, size: 9),
-              const SizedBox(width: 6),
+              const SizedBox(height: 8),
               Text(
-                'Open to join',
-                style: Theme.of(context).textTheme.bodySmall,
+                'Create an open room or join a discussion with other participants.',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (_visibleRooms.isEmpty)
-            _EmptyRooms(onCreate: _showCreateRoomDialog)
-          else
-            ..._visibleRooms.map(
-              (room) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _RoomCard(room: room, onJoin: () => _joinRoom(room)),
-              ),
-            ),
-          const SizedBox(height: 12),
-          Text(
-            'Room discovery preview · Rooms are sample data until a backend is connected.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+              const SizedBox(height: 22),
+              TextField(
+                controller: _searchController,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: 'Search meeting names or descriptions',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _searchController.text.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: 'Clear search',
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {});
+                          },
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
-          ),
-        ],
+              ),
+              const SizedBox(height: 24),
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  !snapshot.hasData)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              else if (snapshot.hasError)
+                _RoomsMessage(
+                  icon: Icons.cloud_off_outlined,
+                  title: 'Could not load meeting rooms',
+                  message: 'Check your connection and Firebase access, then try again.',
+                  actionLabel: 'Retry',
+                  onAction: () => setState(() {
+                    // Rebuild the stream after a transient connection error.
+                  }),
+                )
+              else if (visibleRooms.isEmpty)
+                _RoomsMessage(
+                  icon: Icons.meeting_room_outlined,
+                  title: query.isEmpty ? 'No open rooms yet' : 'No matching rooms',
+                  message: query.isEmpty
+                      ? 'Create the first room. It will be visible here for others to join.'
+                      : 'Try another search or create a new room.',
+                  actionLabel: 'Create a room',
+                  onAction: _showCreateRoomDialog,
+                )
+              else ...[
+                Text(
+                  '${visibleRooms.length} ${visibleRooms.length == 1 ? 'open room' : 'open rooms'}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 12),
+                ...visibleRooms.map(
+                  (room) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _RoomCard(
+                      room: room,
+                      isJoining: _isJoining,
+                      onJoin: () => _joinRoom(room),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
       ),
     );
   }
 
-  void _joinRoom(_DiscussionRoom room) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Join flow for "${room.title}" will connect when rooms are online.'),
-      ),
-    );
+  Future<void> _joinRoom(DiscussionRoom room) async {
+    if (_isJoining) return;
+    setState(() => _isJoining = true);
+    try {
+      await _repository.joinRoom(room.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'You have joined this room. The live whiteboard and video meeting workspace are not connected in this build yet.',
+          ),
+          duration: Duration(seconds: 5),
+        ),
+      );
+    } on DiscussionRoomException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not join this room. Please try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isJoining = false);
+    }
   }
 
   Future<void> _showCreateRoomDialog() async {
+    if (_isCreating) return;
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
-    String topic = 'Number Theory';
 
-    final created = await showDialog<_DiscussionRoom>(
+    final details = await showDialog<_NewRoomDetails>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Create a discussion room'),
-          content: SizedBox(
-            width: 420,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: titleController,
-                    autofocus: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Room name',
-                      hintText: 'e.g. RMO Geometry Discussion',
-                    ),
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Create a meeting room'),
+        content: SizedBox(
+          width: 420,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(
+                    labelText: 'Meeting name',
+                    hintText: 'e.g. Evening discussion',
                   ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: topic,
-                    decoration: const InputDecoration(labelText: 'Maths topic'),
-                    items: _topics.skip(1).map((item) {
-                      return DropdownMenuItem(value: item, child: Text(item));
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) setDialogState(() => topic = value);
-                    },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descriptionController,
+                  maxLines: 3,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                    hintText: 'What would you like to discuss?',
                   ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: descriptionController,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'What will you discuss?',
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final title = titleController.text.trim();
-                if (title.isEmpty) return;
-                Navigator.pop(
-                  dialogContext,
-                  _DiscussionRoom(
-                    title: title,
-                    topic: topic,
-                    description: descriptionController.text.trim().isEmpty
-                        ? 'An open maths discussion. Join and share your ideas.'
-                        : descriptionController.text.trim(),
-                    participants: 1,
-                    level: 'All levels',
-                    host: 'You',
-                  ),
-                );
-              },
-              child: const Text('Create'),
-            ),
-          ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final title = titleController.text.trim();
+              if (title.isEmpty) return;
+              Navigator.pop(
+                dialogContext,
+                _NewRoomDetails(
+                  title: title,
+                  description: descriptionController.text.trim(),
+                ),
+              );
+            },
+            child: const Text('Create'),
+          ),
+        ],
       ),
     );
 
     titleController.dispose();
     descriptionController.dispose();
+    if (details == null || !mounted) return;
 
-    if (created != null && mounted) {
-      setState(() => _rooms.insert(0, created));
+    setState(() => _isCreating = true);
+    try {
+      await _repository.createRoom(
+        title: details.title,
+        topic: 'General',
+        description: details.description,
+      );
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Room added to this preview. Online room creation needs a backend.'),
+          content: Text('Your room is open and ready for others to join.'),
         ),
       );
+    } on DiscussionRoomException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not create the room. Check your connection and try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isCreating = false);
     }
   }
 }
 
-class _RoomCard extends StatelessWidget {
-  const _RoomCard({required this.room, required this.onJoin});
+class _NewRoomDetails {
+  const _NewRoomDetails({required this.title, required this.description});
 
-  final _DiscussionRoom room;
+  final String title;
+  final String description;
+}
+
+class _RoomCard extends StatelessWidget {
+  const _RoomCard({
+    required this.room,
+    required this.isJoining,
+    required this.onJoin,
+  });
+
+  final DiscussionRoom room;
+  final bool isJoining;
   final VoidCallback onJoin;
 
   @override
   Widget build(BuildContext context) {
+    final participantLabel =
+        '${room.participantCount} ${room.participantCount == 1 ? 'participant' : 'participants'}';
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -302,39 +316,53 @@ class _RoomCard extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: AppTheme.brandOrange.withValues(alpha: 0.12),
+                    color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(13),
                   ),
-                  child: const Icon(Icons.forum_rounded, color: AppTheme.brandOrange),
+                  child: Icon(
+                    Icons.meeting_room_rounded,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(room.title,
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                      const SizedBox(height: 5),
-                      Text(room.description),
+                      Text(
+                        room.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                      if (room.description.isNotEmpty) ...[
+                        const SizedBox(height: 5),
+                        Text(room.description),
+                      ],
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
                 FilledButton(
-                  onPressed: onJoin,
+                  onPressed: isJoining ? null : onJoin,
                   child: const Text('Join'),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Wrap(
               spacing: 14,
               runSpacing: 8,
               children: [
-                _RoomMeta(icon: Icons.category_outlined, label: room.topic),
-                _RoomMeta(icon: Icons.people_outline, label: '${room.participants} participants'),
-                _RoomMeta(icon: Icons.school_outlined, label: room.level),
-                _RoomMeta(icon: Icons.person_outline, label: 'Started by ${room.host}'),
+                _RoomMeta(
+                  icon: Icons.people_outline,
+                  label: participantLabel,
+                ),
+                _RoomMeta(
+                  icon: Icons.person_outline,
+                  label: 'Created by ${room.hostName}',
+                ),
               ],
             ),
           ],
@@ -355,7 +383,11 @@ class _RoomMeta extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+        Icon(
+          icon,
+          size: 16,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(width: 5),
         Text(label, style: Theme.of(context).textTheme.bodySmall),
       ],
@@ -363,47 +395,44 @@ class _RoomMeta extends StatelessWidget {
   }
 }
 
-class _EmptyRooms extends StatelessWidget {
-  const _EmptyRooms({required this.onCreate});
+class _RoomsMessage extends StatelessWidget {
+  const _RoomsMessage({
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+  });
 
-  final VoidCallback onCreate;
+  final IconData icon;
+  final String title;
+  final String message;
+  final String actionLabel;
+  final VoidCallback onAction;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 42),
+      padding: const EdgeInsets.symmetric(vertical: 42, horizontal: 12),
       child: Column(
         children: [
-          Icon(Icons.search_off_rounded,
-              size: 46, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          Icon(
+            icon,
+            size: 46,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(height: 12),
-          const Text('No rooms match your search.'),
-          const SizedBox(height: 12),
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          Text(message, textAlign: TextAlign.center),
+          const SizedBox(height: 14),
           OutlinedButton.icon(
-            onPressed: onCreate,
+            onPressed: onAction,
             icon: const Icon(Icons.add_rounded),
-            label: const Text('Create a room'),
+            label: Text(actionLabel),
           ),
         ],
       ),
     );
   }
-}
-
-class _DiscussionRoom {
-  const _DiscussionRoom({
-    required this.title,
-    required this.topic,
-    required this.description,
-    required this.participants,
-    required this.level,
-    required this.host,
-  });
-
-  final String title;
-  final String topic;
-  final String description;
-  final int participants;
-  final String level;
-  final String host;
 }
