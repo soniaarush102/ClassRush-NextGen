@@ -221,7 +221,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
             const SizedBox(height: 6),
             Text(
               snapshot.hasError
-                  ? 'Could not load the shared whiteboard.'
+                  ? 'Could not load the shared whiteboard: ${snapshot.error}'
                   : 'Drawings sync with room members after each stroke is finished.',
               style: Theme.of(context).textTheme.bodySmall,
               textAlign: TextAlign.center,
@@ -239,8 +239,8 @@ class _MeetingScreenState extends State<MeetingScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Whiteboard sync failed (${error.code}).'),
-          duration: const Duration(seconds: 8),
+          content: Text('Whiteboard sync failed (${error.code}): ${error.message ?? 'No additional details'}'),
+          duration: const Duration(seconds: 12),
         ),
       );
     } catch (error) {
