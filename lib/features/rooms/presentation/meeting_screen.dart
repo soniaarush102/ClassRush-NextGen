@@ -287,7 +287,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
                       setState(() {
                         final current = _normalise(details.localPosition, size);
                         if (_boardTool == 'Pen' || _boardTool == 'Highlighter' || _boardTool == 'Eraser') {
-                          _activeStroke.add(current);
+                          _appendInterpolatedPoints(current, size);
                         } else {
                           _activeStroke = _makeToolPoints(_strokeStart!, current);
                         }
@@ -339,6 +339,26 @@ class _MeetingScreenState extends State<MeetingScreen> {
     );
   }
 
+  // Fill gaps between pointer events so fast stylus/finger movement paints
+  // a continuous line instead of separated short segments.
+  void _appendInterpolatedPoints(Offset current, Size size) {
+    if (_activeStroke.isEmpty) {
+      _activeStroke.add(current);
+      return;
+    }
+    final previous = _activeStroke.last;
+    final dx = (current.dx - previous.dx) * size.width;
+    final dy = (current.dy - previous.dy) * size.height;
+    final distance = math.sqrt(dx * dx + dy * dy);
+    final steps = (distance / 2).ceil().clamp(1, 120);
+    for (var step = 1; step <= steps; step++) {
+      _activeStroke.add(Offset(
+        previous.dx + (current.dx - previous.dx) * step / steps,
+        previous.dy + (current.dy - previous.dy) * step / steps,
+      ));
+    }
+  }
+
   List<Offset> _makeToolPoints(Offset start, Offset end) {
     if (_boardTool == 'Line') return [start, end];
     if (_boardTool == 'Rectangle') {
@@ -388,11 +408,21 @@ class _MeetingScreenState extends State<MeetingScreen> {
   _BoardStroke _decodeStroke(Map<String, dynamic> stroke) {
     final rawPoints = stroke['points'] as List<dynamic>? ?? [];
     final points = rawPoints.map((rawPoint) {
-      final pair = rawPoint as List<dynamic>;
-      return Offset(
-        (pair[0] as num).toDouble(),
-        (pair[1] as num).toDouble(),
-      );
+      // New strokes use maps because Firestore does not support nested arrays.
+      // Keep reading legacy coordinate pairs so existing board data remains visible.
+      if (rawPoint is Map) {
+        return Offset(
+          (rawPoint['x'] as num).toDouble(),
+          (rawPoint['y'] as num).toDouble(),
+        );
+      }
+      if (rawPoint is List && rawPoint.length >= 2) {
+        return Offset(
+          (rawPoint[0] as num).toDouble(),
+          (rawPoint[1] as num).toDouble(),
+        );
+      }
+      return Offset.zero;
     }).toList();
     return _BoardStroke(
       points: points,
