@@ -59,12 +59,24 @@ class DiscussionRoomRepository {
     // appear as real user meetings (for example, Number Theory sample rooms).
     return _rooms
         .where('status', isEqualTo: 'open')
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map(DiscussionRoom.fromFirestore)
-            .where((room) => room.isJoinable && room.topic == 'General')
-            .toList());
+        .map((snapshot) {
+          final rooms = snapshot.docs
+              .map(DiscussionRoom.fromFirestore)
+              .where((room) => room.isJoinable && room.topic == 'General')
+              .toList();
+          // Sort locally so this query needs only Firestore's automatic
+          // single-field index and does not depend on a composite index.
+          rooms.sort((a, b) {
+            final aDate = a.createdAt;
+            final bDate = b.createdAt;
+            if (aDate == null && bDate == null) return 0;
+            if (aDate == null) return 1;
+            if (bDate == null) return -1;
+            return bDate.compareTo(aDate);
+          });
+          return rooms;
+        });
   }
 
   Future<String> createRoom({
