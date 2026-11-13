@@ -1,6 +1,6 @@
 # Firebase setup for CLASSRUSH
 
-This repository includes the FlutterFire packages, a Firestore room model/repository, security rules, and query indexes. It is **not connected to a Firebase project yet**.
+This repository includes FlutterFire packages, Firebase Android configuration, a Firestore room model/repository, security rules, and query indexes. The Android app initializes the configured Firebase project at startup.
 
 ## 1. Create the Firebase project
 
