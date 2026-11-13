@@ -79,6 +79,24 @@ class DiscussionRoomRepository {
         });
   }
 
+  /// Streams the current members of a room so every participant sees
+  /// joins and departures without refreshing the meeting screen.
+  Stream<List<Map<String, dynamic>>> watchParticipants(String roomId) {
+    return _rooms.doc(roomId).collection('members').snapshots().map((snapshot) {
+      final participants =
+          snapshot.docs.map((document) => document.data()).toList();
+      participants.sort((a, b) {
+        final aJoined = a['joinedAt'];
+        final bJoined = b['joinedAt'];
+        if (aJoined is Timestamp && bJoined is Timestamp) {
+          return aJoined.compareTo(bJoined);
+        }
+        return 0;
+      });
+      return participants;
+    });
+  }
+
   Future<String> createRoom({
     required String title,
     required String topic,
