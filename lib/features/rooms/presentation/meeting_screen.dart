@@ -138,7 +138,10 @@ class _MeetingScreenState extends State<MeetingScreen> {
 
         return Column(
           children: [
-            Row(
+            Wrap(
+              spacing: 6,
+              runSpacing: 2,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 DropdownButton<String>(
                   value: _boardTool,
@@ -268,7 +271,6 @@ class _MeetingScreenState extends State<MeetingScreen> {
                       ],
                     ),
                   ),
-                const Spacer(),
                 const Text('Shared Whiteboard'),
               ],
             ),
@@ -780,8 +782,29 @@ class _BoardPainter extends CustomPainter {
         continue;
       }
       final path = Path()..moveTo(points.first.dx, points.first.dy);
-      for (final point in points.skip(1)) {
-        path.lineTo(point.dx, point.dy);
+      if (points.length > 5) {
+        // Smooth freehand strokes with quadratic curves through the sampled
+        // points. This removes the small angular joints visible with lineTo.
+        for (var i = 1; i < points.length - 1; i++) {
+          final current = points[i];
+          final next = points[i + 1];
+          final midpoint = Offset(
+            (current.dx + next.dx) / 2,
+            (current.dy + next.dy) / 2,
+          );
+          path.quadraticBezierTo(
+            current.dx,
+            current.dy,
+            midpoint.dx,
+            midpoint.dy,
+          );
+        }
+        path.lineTo(points.last.dx, points.last.dy);
+      } else {
+        // Keep deliberate geometry tools (line and rectangle) crisp.
+        for (final point in points.skip(1)) {
+          path.lineTo(point.dx, point.dy);
+        }
       }
       canvas.drawPath(path, paint);
     }
