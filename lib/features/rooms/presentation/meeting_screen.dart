@@ -460,7 +460,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
       );
       return true;
     } on FirebaseException catch (error) {
-      if (!mounted) return;
+      if (!mounted) return false;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Whiteboard sync failed (${error.code}): ${error.message ?? 'No additional details'}'),
@@ -469,7 +469,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
       );
       return false;
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted) return false;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Whiteboard sync failed: ${error.toString().length > 180 ? error.toString().substring(0, 180) : error.toString()}'),
